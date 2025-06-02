@@ -10,7 +10,7 @@ MongoDB (local installation or MongoDB Atlas)
 Installation
 
 Clone the repository:
-git clone https://github.com/yourusername/footyconnect.git
+git clone https://github.com/Ziroworld/footyconnect.git
 
 
 Navigate to the project directory:
