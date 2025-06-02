@@ -6,29 +6,25 @@ const { generateToken } = require('../security/auth.js');
 const register = async (req, res) => {
   try {
     const { email, password } = req.body;
-    // 1) Check required fields
+
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
 
-    // 2) Ensure email is unique
     const existing = await User.findOne({ email });
     if (existing) {
       return res.status(409).json({ message: 'Email already in use.' });
     }
 
-    // 3) Hash the password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
 
-    // 4) Create and save user
     const newUser = new User({
       email,
       password: hashedPassword
     });
     await newUser.save();
 
-    // 5) Generate JWT
     const token = generateToken(newUser);
 
     return res.status(201).json({
@@ -49,20 +45,18 @@ const login = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required.' });
     }
-
-    // 2) Find user by email
+    
     const user = await User.findOne({ email });
     if (!user) {
       return res.status(404).json({ message: 'Invalid credentials.' });
     }
 
-    // 3) Compare password
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
       return res.status(401).json({ message: 'Invalid credentials.' });
     }
 
-    // 4) Generate JWT
     const token = generateToken(user);
 
     return res.status(200).json({
