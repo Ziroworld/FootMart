@@ -6,6 +6,7 @@ const cartRouter = require('../routes/cart-route');
 const wishlistRouter = require('../routes/wishlist-route');
 const orderRouter = require('../routes/order-route');
 const addressRouter = require('../routes/address-route');
+const playerRouter = require('../routes/player-route');
 
 
 // Body parser
@@ -21,7 +22,7 @@ app.use('/api/cart', cartRouter);
 app.use('/api/wishlist', wishlistRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/address', addressRouter);
-
+app.use('/api/players', playerRouter);
 
 // 404 for any other route
 app.use((req, res) => {
