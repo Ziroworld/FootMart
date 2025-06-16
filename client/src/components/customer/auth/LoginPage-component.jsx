@@ -1,29 +1,49 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../../assets/logo.png";
+import { AuthApi } from "../../../server/AuthApi.jsx";
 
 function LoginPageComponent() {
+  /* ---------- UI state ---------- */
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotUsername, setShowForgotUsername] = useState(false);
-
-  const [email, setEmail] = useState("");
+  const [email, setEmail]       = useState("");
   const [password, setPassword] = useState("");
-  const [touched, setTouched] = useState({ email: false, password: false });
+  const [touched, setTouched]   = useState({ email: false, password: false });
+  const [loading, setLoading]   = useState(false);
+  const [error, setError]       = useState("");
 
   const navigate = useNavigate();
 
-  // Validation
-  const isEmailValid = email.trim().length > 0;
+  /* ---------- Validation ---------- */
+  const isEmailValid    = email.trim().length > 0;
   const isPasswordValid = password.trim().length > 0;
 
-  const handleSubmit = (e) => {
+  /* ---------- Submit handler ---------- */
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setTouched({ email: true, password: true });
+    if (!isEmailValid || !isPasswordValid || loading) return;
 
-    if (!isEmailValid || !isPasswordValid) return;
-    // TODO: handle sign in logic
+    setLoading(true);
+    setError("");
+
+    const res = await AuthApi.login({ email, password });
+    setLoading(false);
+
+    if (res.success) {
+      // route by role
+      if (res.role === "admin") {
+        navigate("/admin/dashboard");
+      } else {
+        navigate("/home");
+      }
+    } else {
+      setError(res.error || "Login failed");
+    }
   };
 
+  /* ---------- UI (unchanged design) ---------- */
   return (
     <div className="bg-white min-h-screen flex flex-col">
       {/* Top Separator with shadow */}
@@ -62,8 +82,9 @@ function LoginPageComponent() {
             Ultimate Football Experience!
           </div>
         </div>
+
         <div className="w-full max-w-xl rounded-2xl border border-gray-200 bg-white px-24 py-14 mb-10 shadow-lg relative">
-          {/* Forgot Username Popup */}
+          {/* Forgot Username Popup (unchanged) */}
           {showForgotUsername && (
             <div className="absolute left-0 top-[84px] md:-left-64 md:top-14 z-10">
               <div className="bg-[#FCF8F3] border border-yellow-300 rounded-xl p-5 shadow-lg flex items-start gap-3 min-w-[280px] relative">
@@ -86,11 +107,13 @@ function LoginPageComponent() {
             </div>
           )}
 
+          {/* ---------------- FORM ---------------- */}
           <form onSubmit={handleSubmit}>
             <p className="mb-7 font-semibold text-[#006241] text-[15px]">
               * indicates required field
             </p>
-            {/* Email/Username */}
+
+            {/* Email / Username */}
             <div className="mb-7">
               <input
                 type="text"
@@ -108,6 +131,7 @@ function LoginPageComponent() {
                 </div>
               )}
             </div>
+
             {/* Password */}
             <div className="mb-5 relative">
               <input
@@ -127,13 +151,13 @@ function LoginPageComponent() {
                 className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500"
               >
                 {showPassword ? (
-                  // open eye
+                  /* eye icon */
                   <svg xmlns="http://www.w3.org/2000/svg" height="22" width="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z" />
                     <circle cx="12" cy="12" r="3" />
                   </svg>
                 ) : (
-                  // closed eye
+                  /* eye-off icon */
                   <svg xmlns="http://www.w3.org/2000/svg" height="22" width="22" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path d="M17.94 17.94A10.92 10.92 0 0112 19C5 19 1 12 1 12a21.31 21.31 0 014.18-5.94M22.54 6.88A11 11 0 0123 12s-4 7-11 7a10.95 10.95 0 01-4.12-.82M9.88 9.88A3 3 0 1114.12 14.12M1 1l22 22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
@@ -145,7 +169,8 @@ function LoginPageComponent() {
                 </div>
               )}
             </div>
-            {/* Keep me signed in & details */}
+
+            {/* Keep me signed in & links (unchanged) */}
             <div className="flex items-center gap-2 mt-1 mb-5">
               <input type="checkbox" checked readOnly className="w-5 h-5 accent-[#006241] rounded" />
               <span className="text-[16px] font-medium">
@@ -155,7 +180,8 @@ function LoginPageComponent() {
                 </a>
               </span>
             </div>
-            {/* Forgot username/password links */}
+
+            {/* Forgot links */}
             <div className="mb-7 flex flex-col gap-2">
               <button
                 type="button"
@@ -171,20 +197,24 @@ function LoginPageComponent() {
                 Forgot your password?
               </a>
             </div>
-            {/* Sign in Button */}
+
+            {/* Submit + error */}
+            {error && <div className="text-red-600 font-semibold mb-4 text-center">{error}</div>}
+
             <div className="flex justify-end mt-7">
               <button
                 type="submit"
+                disabled={loading}
                 className="bg-[#00754A] hover:bg-[#006241] text-white px-8 py-3 rounded-full shadow-md font-semibold text-[18px] transition"
                 style={{ minWidth: 160 }}
               >
-                Sign in
+                {loading ? "Signing in..." : "Sign in"}
               </button>
             </div>
           </form>
         </div>
 
-        {/* Join FootMart Now Section */}
+        {/* Join FootMart Now section (unchanged) */}
         <div className="w-full max-w-xl flex flex-col items-center justify-center py-6 mb-10">
           <div className="text-green-700 text-sm font-bold tracking-wide mb-2 text-center uppercase" style={{ letterSpacing: ".1em" }}>
             Join FootMart Now

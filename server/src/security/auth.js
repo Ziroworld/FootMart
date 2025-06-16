@@ -9,25 +9,33 @@ if (!SECRET_KEY) {
 function generateToken(user) {
   const payload = {
     id: user._id,
-    email: user.email
+    email: user.email,
+    role: user.role           // <-- NEW
   };
-  return jwt.sign(payload, SECRET_KEY, { expiresIn: '5D' });
+  // 5 days token life
+  return jwt.sign(payload, SECRET_KEY, { expiresIn: '5d' });
 }
 
 
 function authenticateToken(req, res, next) {
   const authHeader = req.header('Authorization');
+
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return res.status(401).json({ message: 'Access Denied. No token provided.' });
+    return res
+      .status(401)
+      .json({ message: 'Access Denied. No token provided.' });
   }
 
   const token = authHeader.split(' ')[1];
+
   try {
-    const decoded = jwt.verify(token, SECRET_KEY);
-    req.user = decoded; // { id, email, iat, exp }
+    const decoded = jwt.verify(token, SECRET_KEY); // { id, email, role, iat, exp }
+    req.user = decoded;
     next();
   } catch (err) {
-    return res.status(403).json({ message: 'Invalid or expired token.' });
+    return res
+      .status(403)
+      .json({ message: 'Invalid or expired token.' });
   }
 }
 

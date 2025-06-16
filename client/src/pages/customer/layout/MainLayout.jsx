@@ -1,6 +1,5 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import logo from "../../../assets/logo.png";
-import ThemeController from "../../../theme/ThemeController.jsx";
 
 const Navbar = () => {
   const navigate = useNavigate();
