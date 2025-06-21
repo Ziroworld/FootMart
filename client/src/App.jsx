@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import MainLayout from "./pages/customer/layout/MainLayout";
 import HomePage from "./pages/customer/home/HomePage";
+import ShopPage from "./pages/customer/shop/ShopPage"; // <-- import ShopPage
 import SignInPage from "./pages/customer/auth/LoginPage";
 import RegisterPage from "./pages/customer/auth/RegisterPage";
 
@@ -10,8 +11,8 @@ function App() {
       <Routes>
         <Route path="/" element={<Navigate to="/home" />} />
         <Route element={<MainLayout />}>
-      
           <Route path="/home" element={<HomePage />} />
+          <Route path="/shop" element={<ShopPage />} /> {/* <-- add this line */}
         </Route>
         <Route path="/auth/login" element={<SignInPage />} />
         <Route path="/auth/register" element={<RegisterPage />} />

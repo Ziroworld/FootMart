@@ -1,5 +1,6 @@
 import React from "react";
 import staticBoot from "../../../assets/offer-images/static-boot.png";
+import { useNavigate } from "react-router-dom";
 
 const newArrivals = [
   {
@@ -39,7 +40,9 @@ function NewArrivals() {
         ))}
       </div>
       <div className="flex justify-center mt-4">
-        <button className="btn btn-outline">View All</button>
+       <button className="btn btn-outline" onClick={() => navigate("/shop")}>
+    View All
+  </button>
       </div>
     </div>
   );

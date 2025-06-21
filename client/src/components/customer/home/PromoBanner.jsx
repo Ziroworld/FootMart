@@ -1,20 +1,36 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import offer2 from "../../../assets/offer-images/offer-2.png";
 
 function PromoBanner() {
+  const navigate = useNavigate();
+
   return (
-    <div className="max-w-6xl mx-auto my-12 p-6 rounded-lg bg-[#6DBDE5] flex flex-col md:flex-row items-center gap-8">
-      <img src={offer2} alt="Promo Cleats" className="w-40 md:w-72" />
-      <div>
-        <h2 className="text-2xl font-bold text-white mb-2">
-          Branded Cleats Sale 15% Off
-        </h2>
-        <span className="text-white">Limited time offer • Nike Puma Adidas &amp; More!</span>
-        <div>
-          <button className="btn btn-white text-black mt-4">Shop Now</button>
-        </div>
-      </div>
+    <div
+      className="relative mx-auto my-12"
+      style={{
+        height: "80vh",          // 80% of viewport height
+        width: "80vw",           // 80% of viewport width
+        maxWidth: "1000px",      // Optional: max width for very large screens
+        minWidth: "320px",       // Optional: min width for tiny screens
+        borderRadius: "1rem",    // Rounded corners
+        overflow: "hidden",      // Keeps button/image inside
+        background: "#fff"       // fallback bg
+      }}
+    >
+      <img
+        src={offer2}
+        alt="Promo Cleats"
+        className="w-full h-full object-contain bg-white"
+      />
+      <button
+        className="absolute left-8 bottom-8 px-6 py-2 bg-white text-black border border-black rounded-[30px] font-semibold uppercase hover:bg-black hover:text-white transition"
+        onClick={() => navigate("/shop")}
+      >
+        Shop now
+      </button>
     </div>
   );
 }
+
 export default PromoBanner;
