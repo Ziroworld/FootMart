@@ -2,7 +2,6 @@ import { Outlet, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import logo from "../../../assets/logo.png";
 import Footer from "../../../components/customer/home/Footer.jsx";
-
 import ProfileModal from "./models/ProfileModel.jsx";
 import ViewOrderModal from "./models/ViewOrderModel.jsx";
 
@@ -10,22 +9,16 @@ import ViewOrderModal from "./models/ViewOrderModel.jsx";
 function Navbar() {
   const navigate = useNavigate();
 
-  /* display-name derived from localStorage */
   const [displayName, setDisplayName] = useState(null);
-
-  /* modal flags */
   const [showProfile, setShowProfile] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
 
-  /* ───── derive “first name” from email or saved name ───── */
   const deriveName = () => {
-    const rawName = localStorage.getItem("userName");          // may be null
+    const rawName = localStorage.getItem("userName");
     if (rawName) return rawName.split(" ")[0];
-
-    const email = localStorage.getItem("userEmail");           // john.doe@foo
+    const email = localStorage.getItem("userEmail");
     if (!email) return null;
-
-    const firstChunk = email.split("@")[0].split(/[._-]/)[0];  // john
+    const firstChunk = email.split("@")[0].split(/[._-]/)[0];
     return firstChunk.charAt(0).toUpperCase() + firstChunk.slice(1);
   };
 
@@ -33,7 +26,6 @@ function Navbar() {
     setDisplayName(deriveName());
   }, []);
 
-  /* ───── sign-out ───── */
   const handleLogout = () => {
     ["authToken", "userRole", "userId", "userName", "userEmail"].forEach(
       (k) => localStorage.removeItem(k)
@@ -62,7 +54,7 @@ function Navbar() {
               {[
                 { label: "Shop", path: "/shop" },
                 { label: "Community", path: "#community" },
-                { label: "Contact us", path: "#contactus" },
+                { label: "Contact us", path: "/contactus" }, // <-- changed here
               ].map((item) => (
                 <button
                   key={item.label}

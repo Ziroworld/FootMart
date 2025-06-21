@@ -6,7 +6,6 @@ import CategoryGrid from "./CategoryGrid";
 import PromoBanner from "./PromoBanner";
 import AboutSection from "./AboutSection";
 import BestSellers from "./BestSellers";
-import Footer from "./Footer";
 
 function HomePageComponent() {
   return (
@@ -18,7 +17,6 @@ function HomePageComponent() {
       <PromoBanner />
       <AboutSection />
       <BestSellers />
-      <Footer />
     </div>
   );
 }
