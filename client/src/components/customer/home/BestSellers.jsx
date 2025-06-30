@@ -1,44 +1,27 @@
-import React from "react";
-import staticBoot from "../../../assets/offer-images/static-boot.png";
+import useProduct from "../../../hooks/UseProduct";
+import ProductCarousel from "../product/ProductCarousel";
 
-const bestSellers = [
-  {
-    title: "Nike Air Zoom Mercurial Vapor 16 X Air Max 95 Pro",
-    price: "NPR 3000.00",
-    img: staticBoot,
-  },
-  {
-    title: "Nike Air Zoom Mercurial Vapor 1 FG Regen CR7 Origins",
-    price: "NPR 3500.00",
-    img: staticBoot,
-  },
-  {
-    title: "Adidas F50 Elite Adizero 2010 FG Leather Remake",
-    price: "NPR 5000.00",
-    img: staticBoot,
-  },
-  {
-    title: "Adidas Predator Elite Fold-over Tongue FG Vivid Horizon",
-    price: "NPR 4000.00",
-    img: staticBoot,
-  },
-];
+function getRandomSubset(arr, count) {
+  const shuffled = [...arr].sort(() => 0.5 - Math.random());
+  return shuffled.slice(0, count);
+}
 
 function BestSellers() {
+  const { products, loading, error } = useProduct();
+
+  // For demo: pick up to 12 random best sellers
+  const bestSellers = getRandomSubset(products, 12);
+
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div className="text-red-500">{error}</div>;
+
   return (
-    <div className="max-w-6xl mx-auto py-8">
-      <h2 className="text-2xl font-bold mb-4">Best Selling Products</h2>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-        {bestSellers.map((card, i) => (
-          <div key={i} className="border rounded-lg p-4 flex flex-col items-center">
-            <img src={card.img} alt={card.title} className="w-28 h-28 object-contain mb-3" />
-            <span className="font-bold">{card.price}</span>
-            <span className="text-center text-sm">{card.title}</span>
-            <button className="btn btn-ghost btn-sm mt-2">♥</button>
-          </div>
-        ))}
-      </div>
-    </div>
+    <ProductCarousel
+      products={bestSellers}
+      title="Best Selling Products"
+      subtitle="Our all-time favorites, handpicked for you."
+      visible={4} // Change to 1 or 3 if you want less visible at once
+    />
   );
 }
 export default BestSellers;

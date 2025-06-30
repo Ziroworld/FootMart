@@ -1,23 +1,33 @@
-
 const Product = require('../models/product-model');
+function validateProductFields(body) {
+  const requiredFields = ['images', 'name', 'price', 'description', 'size', 'quantity', 'brand', 'category'];
+  for (const field of requiredFields) {
+    if (body[field] === undefined || body[field] === null || body[field] === '') {
+      return false;
+    }
+  }
+  if (!Array.isArray(body.images) || body.images.length === 0) {
+    return false;
+  }
+  return true;
+}
 
 const createProduct = async (req, res) => {
   try {
-    // Destructure payload. If req.body is undefined, this will throw.
     const {
-      imageUrl,
+      images,
       name,
       price,
       description,
       size,
       quantity,
       brand,
-      category
+      category,
+      specs
     } = req.body;
 
     // Basic validation
-    if (!imageUrl || !name || price == null || !description || size == null ||
-        quantity == null || !brand || !category) {
+    if (!validateProductFields(req.body)) {
       return res.status(400).json({ message: 'All product fields are required.' });
     }
 
@@ -28,14 +38,15 @@ const createProduct = async (req, res) => {
     }
 
     const newProduct = new Product({
-      imageUrl,
+      images,
       name,
       price,
       description,
       size,
       quantity,
       brand,
-      category
+      category,
+      specs
     });
 
     const saved = await newProduct.save();
@@ -47,9 +58,6 @@ const createProduct = async (req, res) => {
   }
 };
 
-/**
- * Get all products.
- */
 const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 });
@@ -74,13 +82,11 @@ const getProductById = async (req, res) => {
   }
 };
 
-
 const updateProduct = async (req, res) => {
   try {
     const { id } = req.params;
-    const updates = req.body; // could be partial
+    const updates = req.body;
 
-    // If category is present in updates, validate it
     if (updates.category) {
       const allowed = ['boots', 'jersey', 'accessories'];
       if (!allowed.includes(updates.category)) {
@@ -88,7 +94,6 @@ const updateProduct = async (req, res) => {
       }
     }
 
-    // Find + update
     const updated = await Product.findByIdAndUpdate(
       id,
       { ...updates, updatedAt: Date.now() },
@@ -103,7 +108,6 @@ const updateProduct = async (req, res) => {
     return res.status(500).json({ message: err.message });
   }
 };
-
 
 const deleteProduct = async (req, res) => {
   try {

@@ -96,6 +96,6 @@ export class AuthApi {
       return await res.json();
     } catch {
       return null;
-    }
+    }a
   }
 }

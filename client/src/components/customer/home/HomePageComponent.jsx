@@ -15,8 +15,8 @@ function HomePageComponent() {
       <NewArrivals />
       <CategoryGrid />
       <PromoBanner />
-      <AboutSection />
       <BestSellers />
+      <AboutSection />
     </div>
   );
 }

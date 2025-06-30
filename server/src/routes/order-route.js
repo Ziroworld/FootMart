@@ -9,21 +9,20 @@ const {
   updateOrderStatus,
   deleteOrder
 } = require('../controllers/order-controller');
-const { authenticateToken } = require('../security/auth');
 
 // Create a new order
-router.post('/create', authenticateToken, createOrder);
+router.post('/create',createOrder);
 
 // Get all orders for the current user
-router.get('/user', authenticateToken, getUserOrders);
+router.get('/user',getUserOrders);
 
 // Get all orders (admin view)
-router.get('/', authenticateToken, getAllOrders);
+router.get('/', getAllOrders);
 
 // Update order status by order ID
-router.put('/update/:id', authenticateToken, updateOrderStatus);
+router.put('/update/:id', updateOrderStatus);
 
 // Delete an order by ID
-router.delete('/delete/:id', authenticateToken, deleteOrder);
+router.delete('/delete/:id', deleteOrder);
 
 module.exports = router;

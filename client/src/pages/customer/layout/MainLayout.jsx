@@ -1,19 +1,31 @@
+
 import { Outlet, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import logo from "../../../assets/logo.png";
 import Footer from "../../../components/customer/home/Footer.jsx";
 import ProfileModal from "./models/ProfileModel.jsx";
 import ViewOrderModal from "./models/ViewOrderModel.jsx";
+import { useUser } from "../../../hooks/useUser.jsx";
+import { useCart } from "../../../hooks/usecarts.jsx";
 
-/* ───────────────────────────────── Navbar ───────────────────────────────── */
 function Navbar() {
   const navigate = useNavigate();
-
+  const { user, logout } = useUser();
+  const { cart } = useCart();
   const [displayName, setDisplayName] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
 
+  // Count total items in cart (all quantities summed)
+  const cartCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
+
+  // Updated logic: derive display name from context/user
   const deriveName = () => {
+    if (user && user.name) return user.name.split(" ")[0];
+    if (user && user.email) {
+      const firstChunk = user.email.split("@")[0].split(/[._-]/)[0];
+      return firstChunk.charAt(0).toUpperCase() + firstChunk.slice(1);
+    }
     const rawName = localStorage.getItem("userName");
     if (rawName) return rawName.split(" ")[0];
     const email = localStorage.getItem("userEmail");
@@ -24,12 +36,10 @@ function Navbar() {
 
   useEffect(() => {
     setDisplayName(deriveName());
-  }, []);
+  }, [user]);
 
   const handleLogout = () => {
-    ["authToken", "userRole", "userId", "userName", "userEmail"].forEach(
-      (k) => localStorage.removeItem(k)
-    );
+    logout();
     setDisplayName(null);
     navigate("/home");
   };
@@ -41,7 +51,7 @@ function Navbar() {
         style={{ minHeight: "72px" }}
       >
         <div className="w-full max-w-7xl flex items-center justify-between mx-auto">
-          {/* ───── Left: logo + links ───── */}
+          {/* Left: logo + links */}
           <div className="flex items-center gap-8">
             <img
               src={logo}
@@ -49,12 +59,11 @@ function Navbar() {
               className="h-16 w-16 cursor-pointer"
               onClick={() => navigate("/home")}
             />
-
             <div className="flex items-center gap-6 ml-2">
               {[
                 { label: "Shop", path: "/shop" },
-                { label: "Community", path: "#community" },
-                { label: "Contact us", path: "/contactus" }, // <-- changed here
+                { label: "Community", path: "/community" },
+                { label: "Contact us", path: "/contactus" },
               ].map((item) => (
                 <button
                   key={item.label}
@@ -74,7 +83,7 @@ function Navbar() {
             </div>
           </div>
 
-          {/* ───── Right: icons + auth / user menu ───── */}
+          {/* Right: icons + auth / user menu */}
           <div className="flex items-center gap-5">
             {/* Wishlist */}
             <button aria-label="Wishlist" onClick={() => navigate("/wishlist")}>
@@ -88,8 +97,12 @@ function Navbar() {
               </svg>
             </button>
 
-            {/* Cart */}
-            <button aria-label="Cart" onClick={() => navigate("/cart")}>
+            {/* Cart with notification badge */}
+            <button
+              aria-label="Cart"
+              onClick={() => navigate("/cart")}
+              className="relative"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 stroke-current fill-none"
@@ -100,6 +113,14 @@ function Navbar() {
                 <circle cx="20" cy="21" r="1" />
                 <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6" />
               </svg>
+              {user && cartCount > 0 && (
+                <span
+                  className="absolute -top-2 -right-2 bg-red-500 text-white text-xs font-bold rounded-full px-2 py-0.5 shadow"
+                  style={{ minWidth: "18px", textAlign: "center" }}
+                >
+                  {cartCount}
+                </span>
+              )}
             </button>
 
             {/* If logged in → dropdown; else → Sign-in / Join */}
@@ -160,23 +181,19 @@ function Navbar() {
         </div>
       </nav>
 
-      {/* ───── Modals ───── */}
+      {/* Modals */}
       <ProfileModal
         open={showProfile}
         onClose={() => setShowProfile(false)}
         name={displayName}
-        email={localStorage.getItem("userEmail")}
+        email={user?.email || localStorage.getItem("userEmail")}
       />
 
-      <ViewOrderModal
-        open={showOrders}
-        onClose={() => setShowOrders(false)}
-      />
+      <ViewOrderModal open={showOrders} onClose={() => setShowOrders(false)} />
     </>
   );
 }
 
-/* ───────────────────────────── Layout wrapper ───────────────────────────── */
 const MainLayout = () => (
   <>
     <Navbar />

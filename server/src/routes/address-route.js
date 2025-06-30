@@ -5,11 +5,10 @@ const {
   getAddress,
   deleteAddress
 } = require('../controllers/address-controller');
-const { authenticateToken } = require('../security/auth');
 
 // All address routes require a valid JWT
-router.post('/', authenticateToken, upsertAddress);
-router.get('/', authenticateToken, getAddress);
-router.delete('/', authenticateToken, deleteAddress);
+router.post('/', upsertAddress);
+router.get('/', getAddress);
+router.delete('/',  deleteAddress);
 
 module.exports = router;

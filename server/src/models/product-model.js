@@ -1,13 +1,26 @@
-
 const mongoose = require('mongoose');
 
 const PRODUCT_CATEGORIES = ['boots', 'jersey', 'accessories'];
 
+const specsSchema = new mongoose.Schema({
+  material: { type: String, trim: true },
+  weight: { type: String, trim: true },
+  studType: { type: String, trim: true },
+  fit: { type: String, trim: true },
+  playerVersion: { type: Boolean },
+  palmMaterial: { type: String, trim: true },
+  closure: { type: String, trim: true },
+  fingerProtection: { type: String, trim: true }
+}, { _id: false });
+
 const productSchema = new mongoose.Schema({
-  imageUrl: {
-    type: String,
-    required: true,          // Cloudinary (or any) URL string
-    trim: true
+  images: {
+    type: [String],
+    required: true,
+    validate: {
+      validator: v => Array.isArray(v) && v.length > 0,
+      message: 'At least one product image is required.'
+    }
   },
   name: {
     type: String,
@@ -25,14 +38,23 @@ const productSchema = new mongoose.Schema({
     trim: true
   },
   size: {
-    type: Number,
+    type: mongoose.Schema.Types.Mixed,
     required: true,
-    min: 0
+    validate: {
+      validator: function(value) {
+        if (typeof value === 'number') return true;
+        if (typeof value === 'string') {
+          return ['S', 'M', 'L', 'XL', 'XXL'].includes(value.toUpperCase());
+        }
+        return false;
+      },
+      message: 'Size must be a number or valid size string (S, M, L, XL, XXL)'
+    }
   },
   quantity: {
     type: Number,
     required: true,
-    min: 0           // quantity = 0 ⇒ out of stock
+    min: 0
   },
   brand: {
     type: String,
@@ -43,6 +65,10 @@ const productSchema = new mongoose.Schema({
     type: String,
     required: true,
     enum: PRODUCT_CATEGORIES
+  },
+  specs: {
+    type: specsSchema,
+    required: false
   }
 }, {
   timestamps: true
