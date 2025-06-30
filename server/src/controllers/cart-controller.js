@@ -1,3 +1,4 @@
+// controllers/cart-controller.js
 const Cart    = require('../models/cart-model');
 const Product = require('../models/product-model');
 
@@ -20,12 +21,17 @@ const addToCart = async (req, res) => {
     }
 
     // Verify product exists
-    const product = await Product.findById(productId);
+    const product = await Product.findById(productId).lean();
     if (!product) {
       console.warn('[Cart] Product not found:', productId);
       return res.status(404).json({ message: 'Product not found.' });
     }
     console.log('[Cart] Found product:', product.name);
+
+    // Pick image (first of `images[]` or fallback to `imageUrl`)
+    const imageUrl = Array.isArray(product.images) && product.images.length
+      ? product.images[0]
+      : product.imageUrl || '';
 
     // Find or create cart
     let cart = await Cart.findOne({ userId });
@@ -40,18 +46,22 @@ const addToCart = async (req, res) => {
     );
     if (existing) {
       console.log('[Cart] Updating quantity for existing item');
-      existing.quantity += quantity;
+      existing.quantity      += quantity;
+      existing.productImage   = imageUrl;
+      existing.productName    = product.name;
+      existing.price          = product.price;
     } else {
       console.log('[Cart] Adding new item to cart');
       cart.items.push({
         productId,
         productName:  product.name,
-        productImage: product.imageUrl,
+        productImage: imageUrl,
         quantity,
         price:        product.price,
       });
     }
 
+    cart.updatedAt = Date.now();
     await cart.save();
     console.log('[Cart] Cart saved, items count:', cart.items.length);
     return res
@@ -75,20 +85,28 @@ const getCart = async (req, res) => {
 
     const cart = await Cart
       .findOne({ userId })
-      .populate('items.productId', 'name price imageUrl');
+      .populate('items.productId', 'name price images imageUrl')
+      .lean();
 
     if (!cart) {
       console.log('[Cart] No cart found, returning empty array');
       return res.status(200).json({ cart: [] });
     }
 
-    const items = cart.items.map(item => ({
-      productId:   item.productId?._id?.toString() || item.productId.toString(),
-      productName: item.productName || item.productId?.name,
-      productImage:item.productImage || item.productId?.imageUrl,
-      price:       item.price || item.productId?.price,
-      quantity:    item.quantity
-    }));
+    const items = cart.items.map(item => {
+      // if we stored image on the item, use it; otherwise take from populated product
+      const fallback = Array.isArray(item.productId.images) && item.productId.images.length
+        ? item.productId.images[0]
+        : item.productId.imageUrl || '';
+
+      return {
+        productId:    item.productId._id.toString(),
+        productName:  item.productName || item.productId.name,
+        productImage: item.productImage  || fallback,
+        price:        item.price         || item.productId.price,
+        quantity:     item.quantity
+      };
+    });
 
     console.log('[Cart] Retrieved items count:', items.length);
     return res.status(200).json({ cart: items });
@@ -155,6 +173,7 @@ const clearCart = async (req, res) => {
     }
 
     cart.items = [];
+    cart.updatedAt = Date.now();
     await cart.save();
     console.log('[Cart] Cart cleared for user:', userId);
     return res
@@ -166,9 +185,59 @@ const clearCart = async (req, res) => {
   }
 };
 
+// Update exact quantity (or remove if <1)
+const updateCartItem = async (req, res) => {
+  console.log('[Cart] updateCartItem called with:', req.body);
+  try {
+    const { userId, productId, quantity } = req.body;
+    if (!userId || !productId || quantity == null) {
+      console.warn('[Cart] Missing parameters:', { userId, productId, quantity });
+      return res.status(400).json({ message: 'userId, productId and quantity are required.' });
+    }
+
+    const cart = await Cart.findOne({ userId });
+    if (!cart) {
+      console.warn('[Cart] No cart found for user:', userId);
+      return res.status(404).json({ message: 'Cart not found.' });
+    }
+
+    const idx = cart.items.findIndex(i => i.productId.toString() === productId);
+    if (idx === -1) {
+      console.warn('[Cart] Item not in cart:', productId);
+      return res.status(404).json({ message: 'Product not in cart.' });
+    }
+
+    if (quantity < 1) {
+      cart.items.splice(idx, 1);
+      console.log('[Cart] Quantity < 1; item removed');
+    } else {
+      // re-fetch product for any updated image/price
+      const product = await Product.findById(productId).lean();
+      const imageUrl = Array.isArray(product.images) && product.images.length
+        ? product.images[0]
+        : product.imageUrl || '';
+
+      cart.items[idx].quantity    = quantity;
+      cart.items[idx].productImage = imageUrl;
+      cart.items[idx].productName  = product.name;
+      cart.items[idx].price        = product.price;
+      console.log('[Cart] Quantity updated to', quantity);
+    }
+
+    cart.updatedAt = Date.now();
+    await cart.save();
+    console.log('[Cart] Cart saved, items count:', cart.items.length);
+    return res.status(200).json({ cart: cart.items });
+  } catch (err) {
+    console.error('[Cart] Error updating cart item:', err.message);
+    return res.status(500).json({ message: err.message });
+  }
+};
+
 module.exports = {
   addToCart,
   getCart,
   removeFromCart,
-  clearCart
+  clearCart,
+  updateCartItem
 };

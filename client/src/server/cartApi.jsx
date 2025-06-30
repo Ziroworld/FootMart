@@ -73,3 +73,12 @@ export const clearCartApi = async (userId) => {
     throw error;
   }
 };
+
+export const updateCartItemApi = async (userId, productId, quantity) => {
+  userId = getUserId(userId);
+  if (!userId) throw new Error('No userId for updateCartItemApi');
+  const { data } = await axios.patch(`${CART_API_BASE_URL}/update`, {
+    userId, productId, quantity
+  });
+  return data.cart;
+};

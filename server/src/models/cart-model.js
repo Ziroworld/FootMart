@@ -4,15 +4,15 @@ const { Schema } = mongoose;
 const CartSchema = new Schema({
   userId: {
     type: Schema.Types.ObjectId,
-    ref: "User", // Assumes you have a User model
+    ref: "User",
     required: true,
-    unique: true  // One cart per user
+    unique: true
   },
   items: [
     {
       productId: {
         type: Schema.Types.ObjectId,
-        ref: "Product", // Reference to Product model
+        ref: "Product",
         required: true
       },
       productName: {
@@ -20,7 +20,7 @@ const CartSchema = new Schema({
         required: true
       },
       productImage: {
-        type: String // URL (Cloudinary link)
+        type: String // <-- URL
       },
       quantity: {
         type: Number,

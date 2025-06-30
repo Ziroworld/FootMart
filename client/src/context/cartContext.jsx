@@ -3,6 +3,7 @@ import {
   addToCartApi,
   getCartApi,
   removeFromCartApi,
+  updateCartItemApi,
   clearCartApi
 } from '../server/cartApi.jsx';
 import { UserContext } from './userContext.jsx';
@@ -13,56 +14,44 @@ export const CartProvider = ({ children }) => {
   const { user } = useContext(UserContext);
   const [cart, setCart] = useState({ items: [] });
 
-  // Helper to get current userId
+  // Grab the current userId (or undefined for guest)
   const getUserId = () => user?.id;
 
-  // Clear on logout
+  // On logout: clear both state & guest storage
   useEffect(() => {
     if (!getUserId()) {
-      console.log('[CART CONTEXT] LOGOUT: clearing cart and guest storage');
       setCart({ items: [] });
       localStorage.removeItem('cart');
-      localStorage.removeItem('userId');
     }
   }, [user]);
 
-  // On login or initial user load, fetch and merge carts
+  // On login (or initial load), merge any guest cart then fetch backend cart
   useEffect(() => {
     const uid = getUserId();
-    if (uid) {
-      // persist userId for guest-cart merge
-      localStorage.setItem('userId', uid);
-      const localCart = JSON.parse(localStorage.getItem('cart') || '{"items":[]}');
-      if (localCart.items.length) {
-        console.log('[CART CONTEXT] merging guest cart into backend for', uid);
-        Promise.all(
-          localCart.items.map(item =>
-            addToCartApi(uid, item.productId, item.quantity)
-          )
+    if (!uid) return;
+
+    // persist for API helpers
+    localStorage.setItem('userId', uid);
+
+    const guestCart = JSON.parse(localStorage.getItem('cart') || '{"items":[]}');
+    if (guestCart.items.length > 0) {
+      // merge guest items
+      Promise.all(
+        guestCart.items.map(item =>
+          addToCartApi(uid, item.productId, item.quantity)
         )
-          .then(() => {
-            localStorage.removeItem('cart');
-            return getCartApi(uid);
-          })
-          .then(data => {
-            console.log('[CART CONTEXT] backend cart after merge:', data);
-            setCart({ items: data.cart || data });
-          })
-          .catch(err => {
-            console.error('[CART CONTEXT] merge error:', err);
-            setCart({ items: [] });
-          });
-      } else {
-        getCartApi(uid)
-          .then(data => {
-            console.log('[CART CONTEXT] fetched backend cart for', uid, data);
-            setCart({ items: data.cart || data });
-          })
-          .catch(err => {
-            console.error('[CART CONTEXT] fetch error:', err);
-            setCart({ items: [] });
-          });
-      }
+      )
+        .then(() => {
+          localStorage.removeItem('cart');
+          return getCartApi(uid);
+        })
+        .then(items => setCart({ items }))
+        .catch(() => setCart({ items: [] }));
+    } else {
+      // just fetch
+      getCartApi(uid)
+        .then(items => setCart({ items }))
+        .catch(() => setCart({ items: [] }));
     }
   }, [user]);
 
@@ -73,20 +62,14 @@ export const CartProvider = ({ children }) => {
     }
   }, [cart, user]);
 
-  // Add to cart
+  // Add/increment
   const addToCart = async (product, qty = 1) => {
     const uid = getUserId();
-    console.log('[CART CONTEXT] addToCart called:', product, qty, 'user:', uid);
     if (uid) {
-      try {
-        const updated = await addToCartApi(uid, product._id, qty);
-        console.log('[CART CONTEXT] addToCartApi returned:', updated);
-        setCart({ items: updated.cart || updated });
-      } catch (e) {
-        console.error('[CART CONTEXT] add error:', e);
-      }
+      const items = await addToCartApi(uid, product._id, qty);
+      setCart({ items });
     } else {
-      // guest flow
+      // guest
       const exists = cart.items.find(i => i.productId === product._id);
       const newItems = exists
         ? cart.items.map(i =>
@@ -105,52 +88,68 @@ export const CartProvider = ({ children }) => {
             },
           ];
       setCart({ items: newItems });
-      console.log('[CART CONTEXT] updated guest cart:', newItems);
     }
   };
 
-  // Remove from cart
-  const removeFromCart = async id => {
+  // Remove entirely
+  const removeFromCart = async productId => {
     const uid = getUserId();
-    console.log('[CART CONTEXT] removeFromCart called:', id, 'user:', uid);
     if (uid) {
-      try {
-        const updated = await removeFromCartApi(uid, id);
-        setCart({ items: updated.cart || updated });
-      } catch (e) {
-        console.error('[CART CONTEXT] remove error:', e);
-      }
+      const items = await removeFromCartApi(uid, productId);
+      setCart({ items });
     } else {
-      setCart({ items: cart.items.filter(item => item.productId !== id) });
+      setCart({ items: cart.items.filter(i => i.productId !== productId) });
     }
   };
 
-  // Clear cart
+  // Clear all
   const clearCart = async () => {
     const uid = getUserId();
-    console.log('[CART CONTEXT] clearCart called, user:', uid);
     if (uid) {
-      try {
-        const cleared = await clearCartApi(uid);
-        setCart({ items: cleared.cart || cleared });
-      } catch (e) {
-        console.error('[CART CONTEXT] clear error:', e);
-      }
+      const items = await clearCartApi(uid);
+      setCart({ items });
     } else {
       setCart({ items: [] });
       localStorage.removeItem('cart');
     }
   };
 
-  // Update quantity
-  const updateItemQuantity = (id, qty) => {
-    if (qty < 1) return removeFromCart(id);
-    const currentQty = cart.items.find(i => i.productId === id)?.quantity || 0;
-    addToCart({ _id: id }, qty - currentQty);
+  // Set exact quantity (or remove if <1)
+  const updateItemQuantity = async (productId, qty) => {
+    if (qty < 1) return removeFromCart(productId);
+    const uid = getUserId();
+    if (uid) {
+      const items = await updateCartItemApi(uid, productId, qty);
+      setCart({ items });
+    } else {
+      setCart({
+        items: cart.items.map(i =>
+          i.productId === productId ? { ...i, quantity: qty } : i
+        )
+      });
+    }
+  };
+
+  // Convenience
+  const incrementItem = id => {
+    const i = cart.items.find(x => x.productId === id);
+    if (i) updateItemQuantity(id, i.quantity + 1);
+  };
+  const decrementItem = id => {
+    const i = cart.items.find(x => x.productId === id);
+    if (i) updateItemQuantity(id, i.quantity - 1);
   };
 
   return (
-    <CartContext.Provider value={{ cart, addToCart, updateItemQuantity, removeFromCart, clearCart }}>
+    <CartContext.Provider value={{
+      cart,
+      addToCart,
+      removeFromCart,
+      clearCart,
+      updateItemQuantity,
+      incrementItem,
+      decrementItem
+    }}>
       {children}
     </CartContext.Provider>
   );
