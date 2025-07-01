@@ -1,5 +1,4 @@
-// src/routes/order-route.js
-
+// server/src/routes/order-route.js
 const express = require('express');
 const router = express.Router();
 const {
@@ -10,19 +9,19 @@ const {
   deleteOrder
 } = require('../controllers/order-controller');
 
-// Create a new order
-router.post('/create',createOrder);
+// Create a new order (and address in one shot)
+router.post('/create', createOrder);
 
-// Get all orders for the current user
-router.get('/user',getUserOrders);
+// Get all orders for a given user
+router.get('/user/:userId', getUserOrders);
 
-// Get all orders (admin view)
+// Admin: get all orders
 router.get('/', getAllOrders);
 
-// Update order status by order ID
+// Update order status
 router.put('/update/:id', updateOrderStatus);
 
-// Delete an order by ID
+// Delete an order
 router.delete('/delete/:id', deleteOrder);
 
 module.exports = router;

@@ -50,7 +50,9 @@ function Navbar() {
         className="w-full bg-base-100 border-b border-base-300 px-8 py-4 flex items-center justify-center"
         style={{ minHeight: "72px" }}
       >
-        <div className="w-full max-w-7xl flex items-center justify-between mx-auto">
+        <div 
+        className="w-full max-w-7xl flex items-center justify-between mx-auto"
+        >
           {/* Left: logo + links */}
           <div className="flex items-center gap-8">
             <img

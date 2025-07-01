@@ -1,83 +1,96 @@
-
-const Order = require('../models/order-model');
-const Cart = require('../models/cart-model');
+// server/src/controllers/order-controller.js
+const Order   = require('../models/order-model');
+const Cart    = require('../models/cart-model');
 const Address = require('../models/address-model');
 
 const createOrder = async (req, res) => {
   try {
-    const userId = req.user.id;
-    const { payment } = req.body;
+    const {
+      userId,
+      payment,
+      fullName,
+      phoneNumber,
+      streetAddress,
+      landmark,
+      city,
+      state,
+      country
+    } = req.body;
 
-    // 1) Payment method is required
-    if (!payment) {
-      return res.status(400).json({ message: "Payment method is required." });
+    // 1) Validate required fields
+    if (
+      !userId ||
+      !payment ||
+      !fullName ||
+      !phoneNumber ||
+      !streetAddress ||
+      !landmark ||
+      !city ||
+      !state ||
+      !country
+    ) {
+      return res.status(400).json({ message: "Missing required fields." });
     }
 
-    // 2) Fetch the user's cart by userId
-    const cartDoc = await Cart.findOne({ userId: userId });
-    if (!cartDoc || cartDoc.items.length === 0) {
+    // 2) Fetch user's cart
+    const cartDoc = await Cart.findOne({ userId });
+    if (!cartDoc || !cartDoc.items?.length) {
       return res.status(400).json({ message: "Cart is empty." });
     }
     const cartItems = cartDoc.items;
 
-    // 3) Fetch the user's address by user (Address model uses field 'user')
-    const addressDoc = await Address.findOne({ user: userId });
-    if (!addressDoc) {
-      return res
-        .status(400)
-        .json({ message: "No address on file. Please add your address first." });
-    }
-
-    // 4) Calculate totalPrice
+    // 3) Calculate total price
     const totalPrice = cartItems.reduce(
-      (sum, item) => sum + item.price * item.quantity,
+      (sum, it) => sum + it.price * it.quantity,
       0
     );
-    if (isNaN(totalPrice)) {
-      return res.status(400).json({ message: "Invalid cart item data." });
-    }
 
-    // 5) Create the new Order
-    const newOrder = await Order.create({
+    // 4) Create & save the address
+    const newAddress = await Address.create({
+      user: userId,
+      fullName,
+      phoneNumber,
+      streetAddress,
+      landmark,
+      city,
+      state,
+      country
+    });
+
+    // 5) Create & save the order, referencing the new address
+    const order = await Order.create({
       user: userId,
       cartItems: cartItems.map(it => ({
-        productId: it.productId,
+        productId:   it.productId,
         productName: it.productName,
-        quantity: it.quantity,
-        price: it.price
+        quantity:    it.quantity,
+        price:       it.price
       })),
-      addressId: addressDoc._id,
+      addressId:  newAddress._id,
       payment,
       totalPrice
     });
 
-    return res.status(201).json({
-      message: "Order created successfully",
-      order: newOrder
-    });
+    return res
+      .status(201)
+      .json({ message: "Order created successfully", order });
   } catch (error) {
     console.error("Error creating order:", error);
     return res.status(500).json({ message: "Internal server error." });
   }
 };
 
-/**
- * Get all orders for the currently authenticated user.
- */
 const getUserOrders = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const { userId } = req.params;
     const orders = await Order.find({ user: userId })
       .populate("cartItems.productId", "name price")
       .populate("addressId");
 
-    // Rename `addressId` → `address` in the response
-    const formatted = orders.map(order => {
-      const obj = order.toObject();
-      return {
-        ...obj,
-        address: obj.addressId
-      };
+    // rename addressId → address for clarity
+    const formatted = orders.map(o => {
+      const obj = o.toObject();
+      return { ...obj, address: obj.addressId };
     });
 
     return res.status(200).json({ orders: formatted });
@@ -87,9 +100,6 @@ const getUserOrders = async (req, res) => {
   }
 };
 
-/**
- * Get all orders in the system (admin view).
- */
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -102,48 +112,33 @@ const getAllOrders = async (req, res) => {
   }
 };
 
-/**
- * Update the status of an order by ID.
- */
 const updateOrderStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    const allowedStatuses = [
-      "Pending",
-      "Processing",
-      "Shipped",
-      "Delivered",
-      "Cancelled"
-    ];
-    if (!allowedStatuses.includes(status)) {
-      return res.status(400).json({
-        message: `Invalid status. Must be one of ${allowedStatuses.join(", ")}`
-      });
+    const allowed = ["Pending","Processing","Shipped","Delivered","Cancelled"];
+    if (!allowed.includes(status)) {
+      return res
+        .status(400)
+        .json({ message: `Status must be one of: ${allowed.join(", ")}` });
     }
-
     const updated = await Order.findByIdAndUpdate(
       id,
       { status, updatedAt: Date.now() },
       { new: true, runValidators: true }
     );
-
     if (!updated) {
       return res.status(404).json({ message: "Order not found." });
     }
-
     return res
       .status(200)
-      .json({ message: "Order status updated successfully", order: updated });
+      .json({ message: "Order status updated", order: updated });
   } catch (error) {
-    console.error("Error updating order status:", error);
+    console.error("Error updating status:", error);
     return res.status(500).json({ message: "Internal server error." });
   }
 };
 
-/**
- * Delete an order by ID.
- */
 const deleteOrder = async (req, res) => {
   try {
     const { id } = req.params;

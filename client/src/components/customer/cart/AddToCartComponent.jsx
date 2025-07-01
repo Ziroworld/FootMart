@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+// client/src/pages/customer/cart/AddToCartPage.jsx
+import React, { useState, useContext } from 'react';
 import { Minus, Plus, X } from 'lucide-react';
 import { useCart } from '../../../hooks/usecarts';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
+import { UserContext } from '../../../context/userContext.jsx';
 
-const AddToCartComponent = () => {
+const AddToCartPage = () => {
   const navigate = useNavigate();
+  const { user } = useContext(UserContext);
   const {
     cart,
     incrementItem,
@@ -13,6 +16,7 @@ const AddToCartComponent = () => {
     clearCart
   } = useCart();
   const [deliveryOption, setDeliveryOption] = useState('inside');
+  const [alert, setAlert] = useState(null);
 
   const subTotal = cart.items.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -21,9 +25,24 @@ const AddToCartComponent = () => {
   const deliveryCharge = deliveryOption === 'inside' ? 100 : 170;
   const grandTotal = subTotal + deliveryCharge;
 
+  const handleProceed = () => {
+    if (!user?.id) {
+      setAlert(
+        <div className="p-4 mb-4 bg-yellow-100 text-yellow-800 rounded">
+          Please <Link to="/auth/login" className="underline">login</Link> to proceed with your order.
+        </div>
+      );
+      return;
+    }
+    // pass cart items to order page, then clear cart
+    navigate('/order', { state: { cartItems: cart.items } });
+    clearCart();
+  };
+
   return (
     <div className="bg-gray-50 min-h-screen py-8">
       <div className="container mx-auto px-4">
+        {alert}
         <nav className="text-sm text-gray-500 mb-2">
           <span onClick={() => navigate('/home')} className="hover:underline cursor-pointer">Home</span>
           <span className="mx-1">&gt;</span>
@@ -118,7 +137,7 @@ const AddToCartComponent = () => {
               </p>
               <div className="border border-gray-200 rounded-lg p-4">
                 <div className="flex justify-between text-sm text-gray-700">
-                  <span>Sub total</span>
+                  <span>Subtotal</span>
                   <span>NRP {subTotal.toLocaleString()}</span>
                 </div>
                 <div className="mt-4 space-y-2">
@@ -152,7 +171,7 @@ const AddToCartComponent = () => {
                   <span>NRP {grandTotal.toLocaleString()}</span>
                 </div>
                 <button
-                  onClick={() => navigate('/customer/order')}
+                  onClick={handleProceed}
                   className="w-full mt-4 bg-black text-white py-3 rounded-full hover:bg-gray-800 transition"
                 >
                   Proceed to order
@@ -174,4 +193,4 @@ const AddToCartComponent = () => {
   );
 };
 
-export default AddToCartComponent;
+export default AddToCartPage;
