@@ -1,7 +1,9 @@
 // client/src/components/customer/order/OrderSection.jsx
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../../../hooks/usecarts';
+import { useOrder } from '../../../hooks/useOrder';
 
 const stateOptions = [
   'Koshi',
@@ -14,21 +16,9 @@ const stateOptions = [
 ];
 
 const OrderSection = () => {
-  const location = useLocation();
   const navigate = useNavigate();
-  const { removeFromCart } = useCart();
-
-  // Initialize cartItems from router state
-  const [cartItems, setCartItems] = useState(() => {
-    return location.state?.cartItems || [];
-  });
-
-  // Redirect to cart if no items
-  useEffect(() => {
-    if (!cartItems.length) {
-      navigate('/cart');
-    }
-  }, [cartItems, navigate]);
+  const { cart, removeFromCart, clearCart } = useCart();
+  const { createOrder } = useOrder();
 
   // Billing form state
   const [billingDetails, setBillingDetails] = useState({
@@ -42,6 +32,9 @@ const OrderSection = () => {
   });
   const [deliveryInside, setDeliveryInside] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState('cod');
+  const [saveNotification, setSaveNotification] = useState(null);
+  const [orderError, setOrderError] = useState(null);
+  const [orderSuccess, setOrderSuccess] = useState(false); // show modal on success
 
   // State dropdown helpers
   const [stateDropdownOpen, setStateDropdownOpen] = useState(false);
@@ -57,29 +50,99 @@ const OrderSection = () => {
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, []);
 
+  useEffect(() => {
+    if (!cart.items.length) {
+      navigate('/cart');
+    }
+  }, [cart, navigate]);
+
   const handleInputChange = e => {
     const { name, value } = e.target;
     setBillingDetails(prev => ({ ...prev, [name]: value }));
   };
 
-  // Remove one item
   const handleRemoveItem = productId => {
     removeFromCart(productId);
-    setCartItems(items => items.filter(i => (i.productId || i.id) !== productId));
   };
 
-  // Totals
-  const subtotal = cartItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+  const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const deliveryCharge = deliveryInside ? 100 : 170;
   const grandTotal = subtotal + deliveryCharge;
 
-  // Filtered states
   const filteredStates = stateOptions.filter(opt =>
     opt.toLowerCase().includes(stateSearch.toLowerCase())
   );
 
+  const handleSaveDetails = () => {
+    const { fullName, phone, address, landmark, city, state, country } = billingDetails;
+    if (!fullName || !phone || !address || !landmark || !city || !state || !country) {
+      setSaveNotification({ type: 'error', message: 'Please fill all required fields.' });
+    } else {
+      setSaveNotification({ type: 'success', message: 'Details saved successfully.' });
+    }
+  };
+
+  // ORDER PLACEMENT
+  const handlePlaceOrder = async () => {
+    setOrderError(null);
+    try {
+      const orderData = {
+        payment: paymentMethod === 'cod' ? 'COD' : 'Khalti',
+        fullName: billingDetails.fullName,
+        phoneNumber: billingDetails.phone,
+        streetAddress: billingDetails.address,
+        landmark: billingDetails.landmark,
+        city: billingDetails.city,
+        state: billingDetails.state,
+        country: billingDetails.country
+      };
+      await createOrder(orderData);
+      await clearCart();
+      setOrderSuccess(true); // show modal
+    } catch (error) {
+      let msg = 'Failed to place order.';
+      if (error.response && error.response.data && error.response.data.message) {
+        msg = error.response.data.message;
+      }
+      setOrderError(msg);
+      console.error('Order placement failed:', error);
+    }
+  };
+
+  // Handle modal okay
+  const handleSuccessOkay = () => {
+    setOrderSuccess(false);
+    navigate('/home');
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* MODAL FOR ORDER SUCCESS */}
+      {orderSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30">
+          <div className="bg-white rounded-xl shadow-xl p-8 max-w-sm w-full flex flex-col items-center">
+            <div className="mb-4">
+              <svg className="w-12 h-12 mx-auto text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="#DDEDE6"/>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12.5l2.5 2.5L16 9" />
+              </svg>
+            </div>
+            <div className="text-green-800 font-semibold text-lg mb-2 text-center">
+              Order placed successfully!
+            </div>
+            <div className="text-gray-600 text-sm mb-4 text-center">
+              Thank you for your purchase. We’ve sent you a confirmation email and SMS.
+            </div>
+            <button
+              onClick={handleSuccessOkay}
+              className="px-6 py-2 rounded-full bg-[#DDEDE6] text-green-800 font-medium border border-[#6FBF92] hover:bg-[#b4dcc3] transition"
+            >
+              Okay
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Breadcrumb */}
       <nav className="text-sm text-gray-600 mb-4">
         <ol className="flex list-reset">
@@ -91,7 +154,6 @@ const OrderSection = () => {
         </ol>
       </nav>
 
-      {/* Title & Info */}
       <h1 className="text-3xl font-bold mb-2">Checkout</h1>
       <p className="text-gray-600 mb-6">
         At FootMart, we deliver top-quality footwear directly to your doorstep. Enjoy fast shipping, hassle-free returns, and exceptional service.
@@ -100,14 +162,14 @@ const OrderSection = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* LEFT: Cart & Billing */}
         <div className="lg:col-span-2 space-y-8">
-          {/* Cart */}
+          {/* Cart Section */}
           <section>
             <h2 className="text-xl font-semibold mb-4">
-              Your Cart ({cartItems.length} {cartItems.length === 1 ? 'item' : 'items'})
+              Your Cart ({cart.items.length} {cart.items.length === 1 ? 'item' : 'items'})
             </h2>
-            {cartItems.length > 0 ? (
+            {cart.items.length > 0 ? (
               <ul className="space-y-4">
-                {cartItems.map(item => {
+                {cart.items.map(item => {
                   const id = item.productId || item.id;
                   const name = item.productName || item.name;
                   const image = item.productImage || item.image;
@@ -140,10 +202,10 @@ const OrderSection = () => {
             )}
           </section>
 
-          {/* Billing */}
+          {/* Billing Details Section */}
           <section>
             <h2 className="text-2xl font-semibold mb-4">Billing Details</h2>
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={e => e.preventDefault()}>
               {/* Full Name */}
               <div>
                 <label className="block text-sm font-medium mb-1">Full Name *</label>
@@ -206,7 +268,7 @@ const OrderSection = () => {
                   />
                 </div>
 
-                {/* State */}
+                {/* State (Dropdown) */}
                 <div className="relative" ref={dropdownRef}>
                   <label className="block text-sm font-medium mb-1">State *</label>
                   <div
@@ -262,13 +324,25 @@ const OrderSection = () => {
                 />
               </div>
 
-              {/* Save & Note */}
+              {/* Save & Notification */}
               <button
                 type="button"
+                onClick={handleSaveDetails}
                 className="mt-4 bg-black text-white px-6 py-2 rounded-full hover:opacity-90"
               >
                 Save Details
               </button>
+              {saveNotification && (
+                <div
+                  className={
+                    saveNotification.type === 'success'
+                      ? 'mt-2 p-3 bg-[#DDEDE6] border-l-4 border-[#6FBF92] text-green-700 text-sm rounded'
+                      : 'mt-2 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 text-sm rounded'
+                  }
+                >
+                  {saveNotification.message}
+                </div>
+              )}
               <p className="mt-2 text-sm text-gray-600">
                 We handle your order with care and pack each item to ensure it arrives in perfect condition.
               </p>
@@ -330,8 +404,14 @@ const OrderSection = () => {
                     </button>
                   </div>
                 </div>
+                {orderError && (
+                  <div className="mt-4 p-3 bg-red-100 border-l-4 border-red-500 text-red-700 text-sm rounded">
+                    {orderError}
+                  </div>
+                )}
                 <button
                   type="button"
+                  onClick={handlePlaceOrder}
                   className="mt-4 w-full text-sm bg-black text-white py-2 rounded-full hover:opacity-90"
                 >
                   Place Order

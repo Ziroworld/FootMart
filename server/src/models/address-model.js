@@ -8,7 +8,6 @@ const AddressSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
-    unique: true  // One address per user
   },
   fullName: {
     type: String,

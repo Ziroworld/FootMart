@@ -1,4 +1,5 @@
 // client/src/pages/customer/cart/AddToCartPage.jsx
+
 import React, { useState, useContext } from 'react';
 import { Minus, Plus, X } from 'lucide-react';
 import { useCart } from '../../../hooks/usecarts';
@@ -34,9 +35,8 @@ const AddToCartPage = () => {
       );
       return;
     }
-    // pass cart items to order page, then clear cart
-    navigate('/order', { state: { cartItems: cart.items } });
-    clearCart();
+    // Navigate to order page (checkout)
+    navigate('/order');
   };
 
   return (
