@@ -11,36 +11,32 @@ const ProductCard = ({ product }) => {
   const [imgIndex, setImgIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
-  // Auto cycle every 1 sec when hovered
   useEffect(() => {
     if (!isHovered) return;
     const interval = setInterval(() => {
       setImgIndex((prev) => (prev + 1) % images.length);
-    }, 1000);
+    }, 1100);
     return () => clearInterval(interval);
   }, [isHovered, images.length]);
 
-  // Reset to first image after 0.5 sec when mouse leaves
   useEffect(() => {
     if (isHovered) return;
-    const timeout = setTimeout(() => {
-      setImgIndex(0);
-    }, 500);
+    const timeout = setTimeout(() => setImgIndex(0), 500);
     return () => clearTimeout(timeout);
   }, [isHovered]);
 
   const handleImageClick = (e) => {
-    e.stopPropagation(); // prevent card navigation
+    e.stopPropagation();
     setImgIndex((prev) => (prev + 1) % images.length);
   };
 
   return (
     <div
-      className="border rounded-lg p-4 flex flex-col items-center relative group cursor-pointer"
+      className="border rounded-lg px-2 py-3 flex flex-col items-center relative group cursor-pointer bg-white shadow-sm hover:shadow-lg transition"
       onClick={() => navigate(`/product/${product._id}`)}
     >
       <div
-        className="relative w-32 h-32 mb-3"
+        className="relative w-24 h-24 sm:w-28 sm:h-28 mb-2"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         onClick={handleImageClick}
@@ -48,17 +44,16 @@ const ProductCard = ({ product }) => {
         <img
           src={images[imgIndex]}
           alt={product.name}
-          className="w-32 h-32 object-contain"
+          className="w-full h-full object-contain"
         />
       </div>
-
-      {/* $ sign in price */}
-      <span className="font-bold mb-1">${product.price}</span>
-      <span className="text-center text-sm mb-2">{product.name}</span>
-
+      <span className="font-bold text-sm mb-1">
+        NPR {product.price?.toLocaleString()}
+      </span>
+      <span className="text-center text-xs sm:text-sm mb-1">{product.name}</span>
       <button
-        className="btn btn-ghost btn-sm absolute top-2 right-2 opacity-70 group-hover:opacity-100 transition"
-        style={{ fontSize: "1.2rem", lineHeight: 1, color: "#111" }}
+        className="btn btn-ghost btn-xs absolute top-2 right-2 opacity-70 group-hover:opacity-100 transition"
+        style={{ fontSize: "1rem", color: "#111" }}
         onClick={(e) => e.stopPropagation()}
       >
         ♥
@@ -66,5 +61,4 @@ const ProductCard = ({ product }) => {
     </div>
   );
 };
-
 export default ProductCard;

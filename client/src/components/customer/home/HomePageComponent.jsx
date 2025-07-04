@@ -4,8 +4,8 @@ import FeaturesBar from "./FeaturesBar";
 import NewArrivals from "./NewArrivals";
 import CategoryGrid from "./CategoryGrid";
 import PromoBanner from "./PromoBanner";
-import AboutSection from "./AboutSection";
 import BestSellers from "./BestSellers";
+import AboutSection from "./AboutSection";
 
 function HomePageComponent() {
   return (

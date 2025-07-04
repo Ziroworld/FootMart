@@ -4,38 +4,6 @@ import manCityImage from '../../../assets/aboutus-images/mancity.jpg';
 function AboutUsComponent() {
   return (
     <section className="max-w-6xl mx-auto my-12 px-4">
-      {/* Breadcrumbs (optional) */}
-      <nav className="w-full bg-base-100 border-b border-base-300">
-  <div className="container mx-auto px-4 lg:px-0 flex items-center justify-between py-4" style={{ minHeight: '72px' }}>
-    {/* Left: logo + links */}
-    <div className="flex items-center gap-8">
-      <img
-        src={logo}
-        alt="FootMart Logo"
-        className="h-14 w-14 cursor-pointer"
-        onClick={() => navigate('/home')}
-      />
-      <div className="hidden md:flex items-center gap-6">
-        {['Shop','Community','Contact us'].map((label, i) => (
-          <button
-            key={i}
-            onClick={() => navigate(`/${label.replace(' ', '').toLowerCase()}`)}
-            className="font-medium text-base hover:underline"
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-    </div>
-
-    {/* Right: icons + auth */}
-    <div className="flex items-center gap-5">
-      {/* Wishlist & Cart unchanged */}
-      {/* ... existing code ... */}
-    </div>
-  </div>
-</nav>
-
       <div className="flex flex-col lg:flex-row items-center gap-12">
         {/* Text Column */}
         <div className="flex-1">

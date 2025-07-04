@@ -1,9 +1,8 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-
-import offer1 from "../../../assets/offer-images/offer-1.png";
-import offer2 from "../../../assets/offer-images/offer-2.png";
-import offer3 from "../../../assets/offer-images/offer-1.png"; // or any third img
+import offer1 from "../../../assets/offer-images/offer-101.png";
+import offer2 from "../../../assets/offer-images/offer-202.png";
+import offer3 from "../../../assets/offer-images/offer-101.png";
 
 const offers = [offer1, offer2, offer3];
 
@@ -11,55 +10,66 @@ function OfferSlider() {
   const [current, setCurrent] = useState(0);
   const navigate = useNavigate();
 
+  const getButtonPosition = (index) => {
+    if (index === 0) {
+      // Exact positioning based on your blue-boxed screenshot area
+      return { left: "20%", bottom: "8%" };
+    }
+    return { left: "13%", bottom: "15%" };
+  };
+
   return (
     <div
-      className="relative mx-auto py-8"
+      className="relative mx-auto my-6 sm:my-10"
       style={{
-        width: "80vw",
-        height: "80vh",
-        maxWidth: "1000px",
-        minWidth: "320px",
-        borderRadius: "1rem",
+        width: "95vw",
+        maxWidth: "1100px",
+        height: "45vw",
+        maxHeight: "550px",
+        borderRadius: "1.3rem",
         overflow: "hidden",
         background: "#fff",
+        boxShadow: "0 6px 40px 0 rgba(40,60,90,0.05)",
       }}
     >
-      {/* Slider strip */}
       <div
-        className="flex transition-transform duration-500 h-full"
+        className="flex w-full h-full transition-transform duration-500"
         style={{ transform: `translateX(-${current * 100}%)` }}
       >
-        {offers.map((src, idx) => (
-          <div
-            key={idx}
-            className="relative min-w-full h-full flex justify-center items-center"
-          >
-            <img
-              src={src}
-              alt={`offer-${idx}`}
-              className="w-full h-full object-contain bg-white"
-            />
+        {offers.map((src, idx) => {
+          const { left, bottom } = getButtonPosition(idx);
+          return (
+            <div key={idx} className="relative min-w-full h-full bg-white">
+              <img src={src} alt={`offer-${idx}`} className="w-full h-full object-cover" />
 
-            {/* SHOP NOW button –– bottom-left overlay  */}
-            <button
-              className="absolute left-8 bottom-8 px-6 py-2 bg-white text-black border border-black rounded-[30px] font-semibold uppercase hover:bg-black hover:text-white transition"
-              onClick={() => navigate("/shop")}
-            >
-              Shop now
-            </button>
-          </div>
-        ))}
+              {/* Button exactly at the position you specified */}
+              <button
+                onClick={() => navigate("/shop")}
+                className="
+                  absolute
+                  px-4 py-2
+                  bg-white text-black border border-black
+                  rounded-full font-semibold uppercase shadow-lg
+                  text-sm hover:bg-black hover:text-white transition
+                "
+                style={{ left, bottom }}
+              >
+                SHOP NOW
+              </button>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Dots */}
-      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex justify-center gap-3">
+      <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-20">
         {offers.map((_, i) => (
           <button
             key={i}
-            className={`w-3 h-3 rounded-full ${
+            onClick={() => setCurrent(i)}
+            aria-label={`Go to slide ${i + 1}`}
+            className={`w-2.5 h-2.5 rounded-full transition ${
               i === current ? "bg-black" : "bg-gray-300"
             }`}
-            onClick={() => setCurrent(i)}
           />
         ))}
       </div>
