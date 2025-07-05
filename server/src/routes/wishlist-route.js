@@ -8,11 +8,11 @@ const {
   removeFromWishlist,
   clearWishlist
 } = require('../controllers/wishlist-controller');
-const { authenticateToken } = require('../security/auth');
 
-router.post('/add', authenticateToken, addToWishlist);
-router.get('/', authenticateToken, getWishlist);
-router.post('/remove', authenticateToken, removeFromWishlist);
-router.post('/clear', authenticateToken, clearWishlist);
+
+router.post('/add',  addToWishlist);
+router.get('/', getWishlist);
+router.post('/remove', removeFromWishlist);
+router.post('/clear', clearWishlist);
 
 module.exports = router;

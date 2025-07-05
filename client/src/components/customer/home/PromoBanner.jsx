@@ -9,11 +9,11 @@ function PromoBanner() {
     <div
       className="relative mx-auto my-8 sm:my-12"
       style={{
-        width: "95vw",
-        maxWidth: "1100px",
-        height: "45vw",
-        maxHeight: "550px",
-        borderRadius: "1.3rem",
+        width: "60%",
+        maxWidth: "none",
+        height: "55vw",
+        maxHeight: "700px",
+        borderRadius: "1.5rem",
         overflow: "hidden",
         background: "#fff",
         boxShadow: "0 6px 40px 0 rgba(40,60,90,0.05)",

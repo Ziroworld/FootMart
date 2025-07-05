@@ -1,8 +1,28 @@
-
 const Wishlist = require('../models/wishlist-model');
 const Product = require('../models/product-model');
 
+// Helper to always flatten/populate product fields for each wishlist item
+function cleanWishlistItems(items) {
+  return items.map(item => {
+    let product = item.productId;
+    if (!product) return null;
 
+    // Pick image (array OR single field)
+    const imageUrl = Array.isArray(product.images) && product.images.length
+      ? product.images[0]
+      : product.imageUrl || '';
+
+    return {
+      productId:    product._id.toString(),
+      productName:  product.name,
+      productImage: imageUrl,
+      price:        product.price,
+      // Add more fields as needed
+    };
+  }).filter(Boolean);
+}
+
+// Get or create
 async function getOrCreateWishlist(userId) {
   let list = await Wishlist.findOne({ userId });
   if (!list) {
@@ -12,23 +32,18 @@ async function getOrCreateWishlist(userId) {
   return list;
 }
 
-
+// Add to Wishlist
 const addToWishlist = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.body.userId;
     const { productId } = req.body;
 
-    if (!productId) {
-      return res.status(400).json({ message: 'productId is required.' });
-    }
+    if (!userId) return res.status(400).json({ message: 'userId is required.' });
+    if (!productId) return res.status(400).json({ message: 'productId is required.' });
 
-    // Check product exists
-    const product = await Product.findById(productId);
-    if (!product) {
-      return res.status(404).json({ message: 'Product not found.' });
-    }
+    const product = await Product.findById(productId).lean();
+    if (!product) return res.status(404).json({ message: 'Product not found.' });
 
-    // Get or create this user's wishlist
     const wishlist = await getOrCreateWishlist(userId);
 
     // Prevent duplicates
@@ -41,50 +56,52 @@ const addToWishlist = async (req, res) => {
     wishlist.updatedAt = Date.now();
     await wishlist.save();
 
-    // Populate product details in response
+    // Populate and clean
     const populated = await Wishlist.findById(wishlist._id)
-      .populate('items.productId', 'name price imageUrl');
+      .populate('items.productId', 'name price imageUrl images')
+      .lean();
 
-    // Return only items array (with product info)
-    return res.status(200).json({ message: 'Product added to wishlist', wishlist: populated.items });
+    const flatItems = cleanWishlistItems(populated.items);
+
+    return res.status(200).json({ message: 'Product added to wishlist', wishlist: flatItems });
   } catch (err) {
     console.error('Error in addToWishlist:', err);
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
 
+// Get Wishlist
 const getWishlist = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.params.userId;
+    if (!userId) return res.status(400).json({ message: 'userId is required.' });
+
     const wishlist = await Wishlist.findOne({ userId })
-      .populate('items.productId', 'name price imageUrl');
+      .populate('items.productId', 'name price imageUrl images')
+      .lean();
 
-    if (!wishlist) {
-      // If no wishlist yet, return empty array
-      return res.status(200).json({ wishlist: [] });
-    }
+    if (!wishlist) return res.status(200).json({ wishlist: [] });
 
-    return res.status(200).json({ wishlist: wishlist.items });
+    const flatItems = cleanWishlistItems(wishlist.items);
+
+    return res.status(200).json({ wishlist: flatItems });
   } catch (err) {
     console.error('Error in getWishlist:', err);
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
 
-
+// Remove from Wishlist
 const removeFromWishlist = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.body.userId;
     const { productId } = req.body;
 
-    if (!productId) {
-      return res.status(400).json({ message: 'productId is required.' });
-    }
+    if (!userId) return res.status(400).json({ message: 'userId is required.' });
+    if (!productId) return res.status(400).json({ message: 'productId is required.' });
 
     const wishlist = await Wishlist.findOne({ userId });
-    if (!wishlist) {
-      return res.status(404).json({ message: 'Wishlist not found.' });
-    }
+    if (!wishlist) return res.status(404).json({ message: 'Wishlist not found.' });
 
     const originalCount = wishlist.items.length;
     wishlist.items = wishlist.items.filter(
@@ -98,24 +115,26 @@ const removeFromWishlist = async (req, res) => {
     wishlist.updatedAt = Date.now();
     await wishlist.save();
 
-    // Populate to send product details back
     const populated = await Wishlist.findById(wishlist._id)
-      .populate('items.productId', 'name price imageUrl');
+      .populate('items.productId', 'name price imageUrl images')
+      .lean();
 
-    return res.status(200).json({ message: 'Product removed from wishlist', wishlist: populated.items });
+    const flatItems = cleanWishlistItems(populated.items);
+
+    return res.status(200).json({ message: 'Product removed from wishlist', wishlist: flatItems });
   } catch (err) {
     console.error('Error in removeFromWishlist:', err);
     return res.status(500).json({ message: 'Internal server error.' });
   }
 };
 
+// Clear Wishlist
 const clearWishlist = async (req, res) => {
   try {
-    const userId = req.user.id;
+    const userId = req.body.userId;
+    if (!userId) return res.status(400).json({ message: 'userId is required.' });
     const wishlist = await Wishlist.findOne({ userId });
-    if (!wishlist) {
-      return res.status(404).json({ message: 'Wishlist not found.' });
-    }
+    if (!wishlist) return res.status(404).json({ message: 'Wishlist not found.' });
 
     wishlist.items = [];
     wishlist.updatedAt = Date.now();

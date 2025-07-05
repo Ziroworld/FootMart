@@ -1,17 +1,14 @@
-// src/components/customer/product/ProductCarousel.jsx
 import React, { useState } from "react";
 import ProductCard from "./productcard";
 import { FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 function ProductCarousel({ products = [], title, subtitle, visible = 4 }) {
-  // Responsive: change visible per screen width
-  // 1 on mobile, 2 on sm-tablet, 4 on desktop
   const getVisibleCount = () => {
     if (typeof window !== "undefined") {
       const w = window.innerWidth;
-      if (w < 640) return 1;        // mobile
-      if (w < 900) return 2;        // small tablet
-      return visible;               // desktop default (usually 4)
+      if (w < 640) return 1;
+      if (w < 900) return 2;
+      return visible;
     }
     return visible;
   };
@@ -25,19 +22,15 @@ function ProductCarousel({ products = [], title, subtitle, visible = 4 }) {
     return () => window.removeEventListener("resize", onResize);
   }, [visible]);
 
-  // Clamp start so we never scroll out of bounds
   React.useEffect(() => {
     if (start > products.length - currVisible) {
       setStart(Math.max(0, products.length - currVisible));
     }
   }, [currVisible, products.length]);
 
-  // Calculate actual visible now (maybe < currVisible if not enough products)
   const maxVisible = Math.min(currVisible, products.length);
-
   const canPrev = start > 0;
   const canNext = start + maxVisible < products.length;
-
   const currentProducts = products.slice(start, start + maxVisible);
 
   const handlePrev = () => {
@@ -60,21 +53,23 @@ function ProductCarousel({ products = [], title, subtitle, visible = 4 }) {
         {/* Left Arrow */}
         {canPrev && (
           <button
-            className="absolute left-0 sm:-left-6 z-10 p-2 rounded-full bg-white border shadow hover:bg-gray-100 transition"
+            className="absolute left-0 sm:-left-8 z-20 p-3 rounded-full bg-white border border-gray-300 shadow-lg
+                        hover:bg-[#00754A] hover:text-white transition-all duration-200"
             onClick={handlePrev}
             aria-label="Previous"
             style={{ top: "50%", transform: "translateY(-50%)" }}
           >
-            <FaChevronLeft size={18} />
+            <FaChevronLeft size={20} />
           </button>
         )}
         {/* Product Grid */}
         <div
-          className={`grid gap-4 w-full
+          className={`grid w-full gap-6 lg:gap-8
             grid-cols-1
             ${maxVisible === 2 ? "sm:grid-cols-2" : ""}
             ${maxVisible === 4 ? "md:grid-cols-4" : ""}
-          `}
+            transition-all`}
+          style={{ padding: "0.5rem 0" }}
         >
           {currentProducts.map((product) => (
             <ProductCard key={product._id} product={product} />
@@ -83,12 +78,13 @@ function ProductCarousel({ products = [], title, subtitle, visible = 4 }) {
         {/* Right Arrow */}
         {canNext && (
           <button
-            className="absolute right-0 sm:-right-6 z-10 p-2 rounded-full bg-white border shadow hover:bg-gray-100 transition"
+            className="absolute right-0 sm:-right-8 z-20 p-3 rounded-full bg-white border border-gray-300 shadow-lg
+                        hover:bg-[#00754A] hover:text-white transition-all duration-200"
             onClick={handleNext}
             aria-label="Next"
             style={{ top: "50%", transform: "translateY(-50%)" }}
           >
-            <FaChevronRight size={18} />
+            <FaChevronRight size={20} />
           </button>
         )}
       </div>
