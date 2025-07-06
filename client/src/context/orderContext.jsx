@@ -8,7 +8,7 @@ import {
   deleteOrderApi
 } from '../server/orderApi.jsx';
 import { UserContext } from './userContext.jsx';
-import { CartContext } from './cartContext.jsx';
+import { CartContext } from './CartContext.jsx';
 
 const OrderContext = createContext();
 

@@ -1,7 +1,7 @@
 import { Outlet, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import logo from "../../../assets/logo.png";
-import Footer from "../../../components/customer/home/Footer.jsx";   // ← just import as before!
+import Footer from "../../../components/customer/home/Footer.jsx";
 import ProfileModal from "./models/ProfileModel.jsx";
 import ViewOrderModal from "./models/ViewOrderModel.jsx";
 import { useUser } from "../../../hooks/useUser.jsx";
@@ -9,8 +9,39 @@ import { useCart } from "../../../hooks/usecarts.jsx";
 import { useWishlist } from "../../../hooks/useWishlist.jsx";
 import { motion } from "framer-motion";
 
-// (If you want to add Toast for the layout, you can put the Toast here!)
-// function Toast({ message, onClose }) { ... }
+// Toast Component
+function Toast({ message, onClose }) {
+  return (
+    <div
+      className="
+        fixed z-50 bottom-6 right-6
+        bg-white/90 backdrop-blur-lg border border-[#B3EFD9] text-[#00754A]
+        rounded-2xl px-7 py-3 flex items-center gap-3 shadow-2xl animate-fade-in
+        font-semibold max-w-xs
+      "
+    >
+      <svg width="22" height="22" viewBox="0 0 24 24" className="text-[#00754A]">
+        <circle cx="12" cy="12" r="10" fill="#D4FFF2" />
+        <path
+          d="M8.5 12.7l2.3 2.3 4.3-4.3"
+          stroke="#00754A"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          fill="none"
+        />
+      </svg>
+      <span className="font-semibold text-[15px]">{message}</span>
+      <button
+        onClick={onClose}
+        className="ml-2 text-xl font-bold text-[#00754A] hover:text-green-600 px-2"
+        aria-label="Close notification"
+      >
+        ✕
+      </button>
+    </div>
+  );
+}
 
 function Navbar() {
   const navigate = useNavigate();
@@ -20,12 +51,12 @@ function Navbar() {
   const [displayName, setDisplayName] = useState(null);
   const [showProfile, setShowProfile] = useState(false);
   const [showOrders, setShowOrders] = useState(false);
+  const [toast, setToast] = useState({ show: false, message: "" });
+  const [redirectTimer, setRedirectTimer] = useState(null);
 
-  // Count total items in cart
   const cartCount = cart.items.reduce((sum, item) => sum + item.quantity, 0);
   const wishlistCount = wishlistItems.length;
 
-  // Derive display name logic
   const deriveName = () => {
     if (user?.name) return user.name.split(" ")[0];
     if (user?.email) {
@@ -48,6 +79,29 @@ function Navbar() {
     logout();
     setDisplayName(null);
     navigate("/home");
+  };
+
+  const handleCloseToast = () => {
+    setToast({ show: false, message: "" });
+    if (redirectTimer) {
+      clearTimeout(redirectTimer);
+      setRedirectTimer(null);
+    }
+  };
+
+  const handleCartClick = () => {
+    if (!user) {
+      setToast({
+        show: true,
+        message: "You need to login. Redirecting to login page...",
+      });
+      const timer = setTimeout(() => {
+        navigate("/auth/login");
+      }, 3000);
+      setRedirectTimer(timer);
+      return;
+    }
+    navigate("/cart");
   };
 
   return (
@@ -91,11 +145,13 @@ function Navbar() {
                   style={{ color: "#00754A", letterSpacing: ".5px" }}
                 >
                   <span>{item.label}</span>
-                  {/* Animated underline */}
-                  <span className="
-                    absolute left-0 -bottom-1 w-0 h-1 rounded-full bg-[#00754A]
-                    transition-all group-hover:w-full
-                  " style={{ transitionDuration: "300ms" }} />
+                  <span
+                    className="
+                      absolute left-0 -bottom-1 w-0 h-1 rounded-full bg-[#00754A]
+                      transition-all group-hover:w-full
+                    "
+                    style={{ transitionDuration: "300ms" }}
+                  />
                 </button>
               ))}
             </div>
@@ -125,7 +181,7 @@ function Navbar() {
             {/* Cart */}
             <button
               aria-label="Cart"
-              onClick={() => navigate("/cart")}
+              onClick={handleCartClick}
               className="relative p-2 hover:scale-105 transition"
             >
               <svg
@@ -204,7 +260,15 @@ function Navbar() {
         </div>
       </motion.nav>
 
-      {/* Profile/Orders Modal */}
+      {/* Toast */}
+      {toast.show && (
+        <Toast
+          message={toast.message}
+          onClose={handleCloseToast}
+        />
+      )}
+
+      {/* Profile and Orders */}
       <ProfileModal
         open={showProfile}
         onClose={() => setShowProfile(false)}
@@ -216,13 +280,12 @@ function Navbar() {
   );
 }
 
-// ---- Main Layout ----
 export default function MainLayout() {
   return (
     <>
       <Navbar />
       <Outlet />
-      <Footer /> {/* ← uses your previously imported footer, nothing replaced */}
+      <Footer />
     </>
   );
 }

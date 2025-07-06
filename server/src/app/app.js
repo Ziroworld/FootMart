@@ -7,7 +7,7 @@ const wishlistRouter = require('../routes/wishlist-route');
 const orderRouter = require('../routes/order-route');
 const addressRouter = require('../routes/address-route');
 const playerRouter = require('../routes/player-route');
-
+const communityApi = require('../community-private-api/community-api.js');
 
 // Body parser
 app.use(express.json());
@@ -23,6 +23,7 @@ app.use('/api/wishlist', wishlistRouter);
 app.use('/api/orders', orderRouter);
 app.use('/api/address', addressRouter);
 app.use('/api/players', playerRouter);
+app.use('/api/community', communityApi);
 
 // 404 for any other route
 app.use((req, res) => {
