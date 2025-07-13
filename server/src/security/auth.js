@@ -38,8 +38,14 @@ function authenticateToken(req, res, next) {
       .json({ message: 'Invalid or expired token.' });
   }
 }
+function requireAdmin(req, res, next) {
+  if (req.user && req.user.role === "admin") return next();
+  return res.status(403).json({ message: "Admin access required." });
+}
+
 
 module.exports = {
   generateToken,
-  authenticateToken
+  authenticateToken,
+  requireAdmin,
 };

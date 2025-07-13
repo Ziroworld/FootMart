@@ -236,6 +236,26 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+const getAllUsers = async (req, res) => {
+  try {
+    const users = await User.find({}, '-password').sort({ createdAt: -1 });
+    return res.status(200).json({ users });
+  } catch (err) {
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
+const deleteUserById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const user = await User.findByIdAndDelete(id);
+    if (!user) return res.status(404).json({ message: "User not found." });
+    return res.status(200).json({ message: "User deleted successfully." });
+  } catch (err) {
+    return res.status(500).json({ message: 'Internal server error.' });
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -243,4 +263,6 @@ module.exports = {
   verifyOtp,
   resetPassword,
   getCurrentUser,
+  getAllUsers,
+  deleteUserById,
 };

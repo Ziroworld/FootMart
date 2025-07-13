@@ -96,6 +96,45 @@ export class AuthApi {
       return await res.json();
     } catch {
       return null;
-    }a
+    }
+  }
+ /** ----------------- ADMIN ROUTES ------------------- */
+
+  static async getAllUsers() {
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(`${AuthApi.base}/`, {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Could not fetch users");
+      return { success: true, users: data.users || [] };
+    } catch (err) {
+      console.error("Get all users error ➜", err.message);
+      return { success: false, error: err.message };
+    }
+  }
+
+  static async deleteUser(id) {
+    try {
+      const token = localStorage.getItem("authToken");
+      const res = await fetch(`${AuthApi.base}/${id}`, {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || "Delete failed");
+      return { success: true, message: data.message };
+    } catch (err) {
+      console.error("Delete user error ➜", err.message);
+      return { success: false, error: err.message };
+    }
   }
 }
+

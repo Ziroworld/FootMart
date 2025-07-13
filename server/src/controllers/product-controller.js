@@ -1,4 +1,5 @@
 const Product = require('../models/product-model');
+
 function validateProductFields(body) {
   const requiredFields = ['images', 'name', 'price', 'description', 'size', 'quantity', 'brand', 'category'];
   for (const field of requiredFields) {
@@ -8,6 +9,9 @@ function validateProductFields(body) {
   }
   if (!Array.isArray(body.images) || body.images.length === 0) {
     return false;
+  }
+  if (!Array.isArray(body.size) || body.size.length === 0) {
+    return false; // size must be array now!
   }
   return true;
 }
@@ -31,10 +35,20 @@ const createProduct = async (req, res) => {
       return res.status(400).json({ message: 'All product fields are required.' });
     }
 
-    // Verify category is valid
+    // Category validation
     const allowed = ['boots', 'jersey', 'accessories'];
     if (!allowed.includes(category)) {
       return res.status(400).json({ message: `Category must be one of ${allowed.join(', ')}` });
+    }
+
+    // Validate sizes array (for good error reporting)
+    const validSize = size.every(val =>
+      typeof val === 'number'
+        ? Number.isInteger(val) && val >= 30 && val <= 50 // adjust as you want
+        : typeof val === 'string' && ['S', 'M', 'L', 'XL', 'XXL'].includes(val.toUpperCase())
+    );
+    if (!validSize) {
+      return res.status(400).json({ message: 'Invalid size(s). Use numbers (shoe size) or S, M, L, XL, XXL.' });
     }
 
     const newProduct = new Product({
@@ -58,6 +72,7 @@ const createProduct = async (req, res) => {
   }
 };
 
+// ... (rest of the code unchanged)
 const getAllProducts = async (req, res) => {
   try {
     const products = await Product.find().sort({ createdAt: -1 });
@@ -91,6 +106,20 @@ const updateProduct = async (req, res) => {
       const allowed = ['boots', 'jersey', 'accessories'];
       if (!allowed.includes(updates.category)) {
         return res.status(400).json({ message: `Invalid category. Must be one of ${allowed.join(', ')}` });
+      }
+    }
+    // Optional: Validate updated size if provided
+    if (updates.size) {
+      if (!Array.isArray(updates.size) || updates.size.length === 0) {
+        return res.status(400).json({ message: 'Size must be an array.' });
+      }
+      const validSize = updates.size.every(val =>
+        typeof val === 'number'
+          ? Number.isInteger(val) && val >= 30 && val <= 50
+          : typeof val === 'string' && ['S', 'M', 'L', 'XL', 'XXL'].includes(val.toUpperCase())
+      );
+      if (!validSize) {
+        return res.status(400).json({ message: 'Invalid size(s). Use numbers (shoe size) or S, M, L, XL, XXL.' });
       }
     }
 

@@ -13,6 +13,7 @@ const specsSchema = new mongoose.Schema({
   fingerProtection: { type: String, trim: true }
 }, { _id: false });
 
+// Accept sizes as array: ["M","L"] or [38, 39, 40]
 const productSchema = new mongoose.Schema({
   images: {
     type: [String],
@@ -38,17 +39,18 @@ const productSchema = new mongoose.Schema({
     trim: true
   },
   size: {
-    type: mongoose.Schema.Types.Mixed,
+    type: [mongoose.Schema.Types.Mixed],
     required: true,
     validate: {
-      validator: function(value) {
-        if (typeof value === 'number') return true;
-        if (typeof value === 'string') {
-          return ['S', 'M', 'L', 'XL', 'XXL'].includes(value.toUpperCase());
-        }
-        return false;
+      validator: function(values) {
+        if (!Array.isArray(values) || values.length === 0) return false;
+        return values.every(val =>
+          typeof val === 'number'
+            ? Number.isInteger(val) && val >= 30 && val <= 50 // You can change shoe size range here if needed
+            : typeof val === 'string' && ['S', 'M', 'L', 'XL', 'XXL'].includes(val.toUpperCase())
+        );
       },
-      message: 'Size must be a number or valid size string (S, M, L, XL, XXL)'
+      message: 'Sizes must be array of numbers (shoe sizes) or strings (S, M, L, XL, XXL)'
     }
   },
   quantity: {

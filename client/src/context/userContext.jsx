@@ -1,14 +1,13 @@
 import React, { createContext, useState, useEffect } from "react";
+import { AuthApi } from "../server/AuthApi"; // <-- Import your API abstraction
 
 export const UserContext = createContext();
 
 export const UserProvider = ({ children }) => {
-  // Initialize user from localStorage if authToken and valid fields exist
   const [user, setUser] = useState(() => {
     const token = localStorage.getItem("authToken");
     const id = localStorage.getItem("userId");
     const role = localStorage.getItem("userRole");
-    // ensure id/role not string "undefined"
     if (!token || !id || id === "undefined" || !role || role === "undefined") return null;
     return {
       id,
@@ -20,6 +19,11 @@ export const UserProvider = ({ children }) => {
 
   const [loading, setLoading] = useState(true);
 
+  // Admin users state
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [usersError, setUsersError] = useState(null);
+
   useEffect(() => {
     let isMounted = true;
     const fetchUser = async () => {
@@ -28,46 +32,27 @@ export const UserProvider = ({ children }) => {
         if (isMounted) setLoading(false);
         return;
       }
-
       try {
-        const response = await fetch("http://localhost:8080/api/auth/me", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-
-        if (response.ok) {
-          const payload = await response.json();
-          // payload shape: { user: {...} }
-          const userObj = payload.user ?? payload;
-          // handle both id and _id
+        const me = await AuthApi.me(token);
+        if (me && me.user) {
+          const userObj = me.user;
           const id = userObj.id ?? userObj._id;
           const role = userObj.role;
           const name = userObj.name ?? userObj.username ?? "";
           const email = userObj.email ?? null;
 
           if (!isMounted) return;
-          // update context
           setUser({ id, role, name: name || null, email });
 
-          // persist fresh data
           localStorage.setItem("userId",   id);
           localStorage.setItem("userRole", role);
           localStorage.setItem("userName", name);
           if (email) localStorage.setItem("userEmail", email);
-        } else if (response.status === 401) {
-          // Token invalid or expired
-          clearAuth();
         } else {
-          // Server error or other status: retain existing user
-          console.warn(
-            `Unexpected status ${response.status} while fetching user.`
-          );
+          clearAuth();
         }
       } catch (error) {
-        // Network error: do not clear token, keep stale user
+        clearAuth();
         console.error("Network error fetching user:", error);
       } finally {
         if (isMounted) setLoading(false);
@@ -75,12 +60,9 @@ export const UserProvider = ({ children }) => {
     };
 
     fetchUser();
-    return () => {
-      isMounted = false;
-    };
+    return () => { isMounted = false; };
   }, []);
 
-  // Helper to clear all auth data
   const clearAuth = () => {
     localStorage.removeItem("authToken");
     localStorage.removeItem("userId");
@@ -90,13 +72,46 @@ export const UserProvider = ({ children }) => {
     setUser(null);
   };
 
-  // public logout
-  const logout = () => {
-    clearAuth();
+  const logout = () => clearAuth();
+
+  // --------- Use AuthApi for all user admin features! ---------
+  const fetchUsers = async () => {
+    setUsersLoading(true);
+    setUsersError(null);
+    try {
+      const res = await AuthApi.getAllUsers();
+      if (res.success) setUsers(res.users);
+      else throw new Error(res.error || "Could not fetch users");
+    } catch (err) {
+      setUsersError(err.message || "Unknown error");
+      setUsers([]);
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const deleteUser = async (userId) => {
+    setUsersLoading(true);
+    setUsersError(null);
+    try {
+      const res = await AuthApi.deleteUser(userId);
+      if (!res.success) throw new Error(res.error || "Failed to delete user");
+      setUsers(prev => prev.filter(u => (u._id || u.id) !== userId));
+      return { success: true };
+    } catch (err) {
+      setUsersError(err.message || "Unknown error");
+      return { success: false, error: err.message };
+    } finally {
+      setUsersLoading(false);
+    }
   };
 
   return (
-    <UserContext.Provider value={{ user, setUser, logout, loading }}>
+    <UserContext.Provider value={{
+      user, setUser, logout, loading,
+      users, setUsers, usersLoading, usersError,
+      fetchUsers, deleteUser,
+    }}>
       {!loading && children}
     </UserContext.Provider>
   );
