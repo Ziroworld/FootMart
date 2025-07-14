@@ -1,5 +1,3 @@
-// client/src/components/admin/Mainlayout-component/Sidebar.jsx
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 import {
@@ -22,7 +20,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-64 min-h-screen bg-white shadow-2xl flex flex-col py-7 px-5 border-r border-[#e3f5ed]">
+    <aside className="fixed top-0 left-0 w-64 h-screen bg-white shadow-2xl flex flex-col py-7 px-5 border-r border-[#e3f5ed] z-30">
       <div className="mb-10 flex items-center gap-3">
         <img src={logo} alt="FootMart Logo" className="w-10 h-10 rounded-xl border-2 border-[#e3f5ed]" />
         <span className="font-bold text-2xl text-[#00754A] tracking-tight">FootMart</span>

@@ -9,7 +9,7 @@ export default function ProductCarousel({ images = [] }) {
   const next = () => setCurrent(c => (c + 1) % images.length);
 
   return (
-    <div className="relative group w-40 h-40 flex items-center justify-center overflow-hidden rounded-xl border border-[#38ffe3]/40 shadow-lg bg-[#111223]">
+    <div className="relative group w-40 h-40 flex items-center justify-center overflow-hidden rounded-xl border border-green-200 shadow-lg bg-green-50/60 mb-4">
       <img
         src={images[current]}
         alt="Product"
@@ -18,14 +18,14 @@ export default function ProductCarousel({ images = [] }) {
       {images.length > 1 && (
         <>
           <button
-            className="absolute left-2 top-1/2 -translate-y-1/2 bg-[#181c29] text-[#38ffe3] rounded-full p-2 opacity-70 group-hover:opacity-100 transition hover:bg-[#282c3d]"
+            className="absolute left-2 top-1/2 -translate-y-1/2 bg-green-100 text-[#0c6836] rounded-full p-2 opacity-80 group-hover:opacity-100 transition hover:bg-green-200"
             onClick={prev}
             type="button"
           >
             <FaChevronLeft />
           </button>
           <button
-            className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#181c29] text-[#38ffe3] rounded-full p-2 opacity-70 group-hover:opacity-100 transition hover:bg-[#282c3d]"
+            className="absolute right-2 top-1/2 -translate-y-1/2 bg-green-100 text-[#0c6836] rounded-full p-2 opacity-80 group-hover:opacity-100 transition hover:bg-green-200"
             onClick={next}
             type="button"
           >
@@ -35,7 +35,7 @@ export default function ProductCarousel({ images = [] }) {
             {images.map((_, i) => (
               <span
                 key={i}
-                className={`block w-2 h-2 rounded-full ${i === current ? 'bg-[#38ffe3]' : 'bg-[#38ffe333]'}`}
+                className={`block w-2 h-2 rounded-full ${i === current ? 'bg-[#0c6836]' : 'bg-green-200'}`}
               />
             ))}
           </div>

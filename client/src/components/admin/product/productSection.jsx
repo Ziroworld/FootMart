@@ -6,15 +6,6 @@ import { createProduct, deleteProduct } from "../../../server/ProductApi";
 import { uploadImagesToCloudinary } from "../../../utils/cloudinaryUploader";
 import ProductCarousel from "./ProductCarousel";
 
-function NeonGlow({ children }) {
-  return (
-    <div className="relative group">
-      <div className="absolute -inset-2 blur-[8px] opacity-70 group-hover:opacity-100 transition pointer-events-none z-0 bg-gradient-to-tr from-[#21d4fd] via-[#b721ff] to-[#ff21b3] rounded-3xl" />
-      <div className="relative z-10">{children}</div>
-    </div>
-  );
-}
-
 function Toast({ message, show, onClose }) {
   React.useEffect(() => {
     if (!show) return;
@@ -32,13 +23,13 @@ function Toast({ message, show, onClose }) {
           className="
             fixed z-[500] left-1/2 bottom-8
             -translate-x-1/2
-            bg-[#1b1836] border border-[#38ffe3]/70 text-[#38ffe3]
+            bg-green-100 border border-green-300 text-green-900
             rounded-2xl px-8 py-5
             flex items-center gap-4 shadow-xl
-            font-bold text-lg backdrop-blur-md
+            font-bold text-lg backdrop-blur-xl
           "
         >
-          <FaImages className="text-2xl text-[#38ffe3]" />
+          <FaImages className="text-2xl text-green-700" />
           {message}
         </motion.div>
       )}
@@ -46,12 +37,19 @@ function Toast({ message, show, onClose }) {
   );
 }
 
+function parseSizes(sizeStr) {
+  return sizeStr
+    .split(",")
+    .map((val) => val.trim())
+    .filter(Boolean)
+    .map((val) => (/^[0-9]+$/.test(val) ? Number(val) : val.toUpperCase()));
+}
+
 export default function ProductSection() {
-  const { products, setProducts, loading, error } = useProduct();
+  const { products, setProducts } = useProduct();
   const [showForm, setShowForm] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "" });
   const [deleting, setDeleting] = useState(null);
-
   const [form, setForm] = useState({
     name: "",
     price: "",
@@ -87,20 +85,6 @@ export default function ProductSection() {
     setForm((prev) => ({ ...prev, images: files }));
   }
 
-  // --- Size String => Array Conversion Logic ---
-  function parseSizes(sizeStr) {
-    return sizeStr
-      .split(",")
-      .map((val) => val.trim())
-      .filter(Boolean)
-      .map((val) =>
-        /^[0-9]+$/.test(val)
-          ? Number(val)
-          : val.toUpperCase()
-      );
-  }
-
-  // --- Create Product ---
   async function handleCreateProduct(e) {
     e.preventDefault();
     if (
@@ -116,25 +100,23 @@ export default function ProductSection() {
       return;
     }
     try {
-      // Cloudinary image upload (with category/product structure)
       const productId = String(products.length + 1).padStart(3, "0");
       const cloudUrls = await uploadImagesToCloudinary(imgFiles, {
         category: form.category,
         productId
       });
-      // --- Prepare Payload ---
       const payload = {
         ...form,
         images: cloudUrls,
         price: Number(form.price),
         quantity: Number(form.quantity),
-        size: parseSizes(form.size), // 💡 Here
+        size: parseSizes(form.size),
         specs: {
           material: form.specs.material,
           weight: form.specs.weight,
           studType: form.specs.studType,
           fit: form.specs.fit,
-          playerVersion: Boolean(form.specs.playerVersion), // Cast to boolean
+          playerVersion: !!form.specs.playerVersion,
           palmMaterial: form.specs.palmMaterial,
           closure: form.specs.closure,
           fingerProtection: form.specs.fingerProtection
@@ -182,58 +164,50 @@ export default function ProductSection() {
     setDeleting(null);
   }
 
-  const cardAnim = {
-    hidden: { opacity: 0, scale: 0.92, y: 18 },
-    visible: (i) => ({
-      opacity: 1,
-      scale: 1,
-      y: 0,
-      transition: { delay: 0.05 * i, type: "spring", stiffness: 90 }
-    })
-  };
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 38 }}
+      initial={{ opacity: 0, y: 32 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.75, type: "spring" }}
-      className="min-h-screen bg-gradient-to-br from-[#090613] via-[#12062b] to-[#051521] px-2 pt-10 pb-24"
+      transition={{ duration: 0.6, type: "spring" }}
+      className="min-h-screen bg-gradient-to-br from-[#f6fff6] via-[#e6faf1] to-[#e9fbff] px-2 pt-10 pb-24"
     >
       <Toast message={toast.message} show={toast.show} onClose={() => setToast({ show: false, message: "" })} />
-      <div className="flex items-center gap-7 mb-12">
-        <h1 className="text-4xl font-extrabold bg-gradient-to-tr from-[#21d4fd] via-[#b721ff] to-[#ff21b3] text-transparent bg-clip-text drop-shadow-lg tracking-tight">
+
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-4 mb-12">
+        <h1 className="text-3xl md:text-4xl font-extrabold text-[#00754A] drop-shadow tracking-tight">
           Product Management
         </h1>
-        <NeonGlow>
-          <button
-            className="flex gap-2 items-center text-xl px-5 py-3 font-bold rounded-2xl bg-[#0b011c] hover:bg-[#211c30]/80 shadow-lg border border-[#21d4fd]/40 text-[#38ffe3] hover:text-[#fff] transition focus:ring-2 focus:ring-[#38ffe3]"
-            onClick={() => setShowForm((v) => !v)}
-          >
-            <FaPlus /> Add Product
-          </button>
-        </NeonGlow>
+        <button
+          className="flex gap-2 items-center text-lg px-5 py-3 font-bold rounded-2xl bg-[#e8ffe5] hover:bg-[#c6f7d7] shadow border border-[#c8eec6] text-[#0c6836] transition focus:ring-2 focus:ring-[#a1ffce]"
+          onClick={() => setShowForm((v) => !v)}
+        >
+          <FaPlus /> Add Product
+        </button>
       </div>
 
       {/* --- Product Form Modal --- */}
       <AnimatePresence>
         {showForm && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
+            initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.96 }}
-            transition={{ duration: 0.21 }}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-[#090613cc] backdrop-blur-sm"
+            exit={{ opacity: 0, scale: 0.97 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-[#101f33]/40 backdrop-blur-[2.5px]"
           >
             <motion.form
               initial={{ y: -40, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -40, opacity: 0 }}
-              className="bg-[#19122f]/95 rounded-3xl shadow-2xl max-w-2xl w-full p-8 border-2 border-[#21d4fd] flex flex-col gap-6 relative"
+              className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-8 border-2 border-[#e3f5ed] flex flex-col gap-6 relative"
               onSubmit={handleCreateProduct}
             >
-              <h2 className="text-3xl font-extrabold bg-gradient-to-r from-[#21d4fd] to-[#ff21b3] text-transparent bg-clip-text mb-4">
+              <h2 className="text-2xl font-extrabold text-[#00754A] mb-1">
                 Add New Product
               </h2>
+              <div className="text-[#26323c]/70 font-semibold mb-2 text-base">
+                Fill all required fields. Separate sizes with commas (e.g. 39, 40, 41 or S, M, L).
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <input type="text" className="input" placeholder="Name" required value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} />
                 <input type="number" className="input" placeholder="Price" required value={form.price} onChange={e => setForm(f => ({ ...f, price: e.target.value }))} />
@@ -261,7 +235,7 @@ export default function ProductSection() {
                 <input type="text" className="input" placeholder="Weight" value={form.specs.weight || ""} onChange={e => setForm(f => ({ ...f, specs: { ...f.specs, weight: e.target.value } }))} />
                 <input type="text" className="input" placeholder="Stud Type" value={form.specs.studType || ""} onChange={e => setForm(f => ({ ...f, specs: { ...f.specs, studType: e.target.value } }))} />
                 <input type="text" className="input" placeholder="Fit" value={form.specs.fit || ""} onChange={e => setForm(f => ({ ...f, specs: { ...f.specs, fit: e.target.value } }))} />
-                <label className="flex items-center gap-2 mt-2 font-semibold text-[#21d4fd]">
+                <label className="flex items-center gap-2 mt-2 font-semibold text-[#0c6836]">
                   <input type="checkbox"
                     checked={form.specs.playerVersion || false}
                     onChange={e => setForm(f => ({ ...f, specs: { ...f.specs, playerVersion: e.target.checked } }))}
@@ -274,7 +248,7 @@ export default function ProductSection() {
 
               {/* --- Image Upload --- */}
               <div
-                className="relative group border-2 border-dashed border-[#38ffe3] rounded-xl py-4 px-5 flex flex-col items-center bg-[#0e1622]/40 cursor-pointer transition-all"
+                className="relative group border-2 border-dashed border-green-300 rounded-xl py-4 px-5 flex flex-col items-center bg-green-50/60 cursor-pointer transition-all"
                 onDragOver={e => e.preventDefault()}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current.click()}
@@ -287,15 +261,15 @@ export default function ProductSection() {
                   hidden
                   onChange={handleImageChange}
                 />
-                <FaUpload className="text-2xl text-[#38ffe3] mb-2" />
-                <div className="text-[#38ffe3] font-bold mb-2">Drag & drop images or click to select</div>
+                <FaUpload className="text-2xl text-green-600 mb-2" />
+                <div className="text-green-800 font-bold mb-2">Drag & drop images or click to select</div>
                 <div className="flex flex-wrap gap-3 justify-center">
                   {imgFiles.map((img, i) => (
                     <img
                       key={i}
                       src={URL.createObjectURL(img)}
                       alt="preview"
-                      className="w-20 h-20 object-cover rounded-xl border-2 border-[#21d4fd] shadow-xl"
+                      className="w-20 h-20 object-cover rounded-xl border-2 border-green-200 shadow-xl"
                     />
                   ))}
                 </div>
@@ -303,7 +277,7 @@ export default function ProductSection() {
 
               <div className="flex gap-4 justify-end mt-4">
                 <button type="button" className="btn" onClick={() => setShowForm(false)}>Cancel</button>
-                <button type="submit" className="btn bg-[#21d4fd] text-[#19122f] font-extrabold hover:bg-[#b721ff] transition">Create</button>
+                <button type="submit" className="btn bg-[#a1ffce] text-[#015e30] font-extrabold hover:bg-[#7af3ac] transition">Create</button>
               </div>
             </motion.form>
           </motion.div>
@@ -311,45 +285,40 @@ export default function ProductSection() {
       </AnimatePresence>
 
       {/* --- PRODUCT LIST --- */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 mt-8">
         <AnimatePresence>
           {products.map((prod, i) => (
             <motion.div
               key={prod._id}
-              custom={i}
-              variants={cardAnim}
-              initial="hidden"
-              animate="visible"
+              initial={{ opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98 }}
+              className="rounded-3xl p-5 bg-white/90 shadow-xl border border-[#e3f5ed] hover:border-[#a1ffce] transition group overflow-hidden"
             >
-              <NeonGlow>
-                <div className="relative rounded-3xl p-6 bg-[#120a1a]/95 shadow-2xl border-2 border-[#38ffe3]/10 hover:border-[#38ffe3]/40 transition group overflow-hidden">
-                  <ProductCarousel images={prod.images || []} />
-                  <div className="mb-2 text-xl font-bold text-[#38ffe3]">{prod.name}</div>
-                  <div className="mb-2 text-lg text-[#fff]/80 font-bold">₨ {prod.price}</div>
-                  <div className="mb-3 text-[#ff21b3] text-xs uppercase tracking-wide font-extrabold">{prod.category}</div>
-                  <div className="mb-2 text-[#bbb]/80 line-clamp-3">{prod.description}</div>
-                  <div className="flex flex-wrap gap-2 text-xs mb-3">
-                    <span className="bg-[#0cfff9]/10 border border-[#21d4fd]/40 px-2 py-1 rounded-lg">Brand: {prod.brand}</span>
-                    <span className="bg-[#d8b4fe]/10 border border-[#b721ff]/30 px-2 py-1 rounded-lg">Size: {Array.isArray(prod.size) ? prod.size.join(", ") : prod.size}</span>
-                    <span className="bg-[#38ffe3]/10 border border-[#38ffe3]/30 px-2 py-1 rounded-lg">Stock: {prod.quantity}</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {prod.specs && Object.entries(prod.specs).map(([k, v]) => v && (
-                      <span key={k} className="bg-[#1b1836]/80 border border-[#38ffe3]/20 px-2 py-1 rounded-lg text-[12px] text-[#38ffe3]">{k}: {v === true ? "Yes" : v}</span>
-                    ))}
-                  </div>
-                  <div className="flex gap-3 justify-end mt-4">
-                    <button
-                      className="btn bg-[#ff21b3] text-white font-extrabold hover:bg-[#b721ff] transition"
-                      disabled={deleting === prod._id}
-                      onClick={() => handleDeleteProduct(prod._id)}
-                    >
-                      {deleting === prod._id ? "Deleting..." : <><FaTrash /> Delete</>}
-                    </button>
-                  </div>
-                </div>
-              </NeonGlow>
+              <ProductCarousel images={prod.images || []} />
+              <div className="mb-2 text-xl font-bold text-[#00754A]">{prod.name}</div>
+              <div className="mb-2 text-lg text-[#26323c]/90 font-bold">₨ {prod.price}</div>
+              <div className="mb-3 text-[#16e087] text-xs uppercase tracking-wide font-extrabold">{prod.category}</div>
+              <div className="mb-2 text-[#7b8c9b] line-clamp-3">{prod.description}</div>
+              <div className="flex flex-wrap gap-2 text-xs mb-3">
+                <span className="bg-green-100 border border-green-200 px-2 py-1 rounded-lg">Brand: {prod.brand}</span>
+                <span className="bg-[#e3f5ed] border border-[#a1ffce]/40 px-2 py-1 rounded-lg">Size: {Array.isArray(prod.size) ? prod.size.join(", ") : prod.size}</span>
+                <span className="bg-green-50 border border-green-200 px-2 py-1 rounded-lg">Stock: {prod.quantity}</span>
+              </div>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {prod.specs && Object.entries(prod.specs).map(([k, v]) => v && (
+                  <span key={k} className="bg-green-50 border border-green-100 px-2 py-1 rounded-lg text-[12px] text-[#01935f]">{k}: {v === true ? "Yes" : v}</span>
+                ))}
+              </div>
+              <div className="flex gap-3 justify-end mt-4">
+                <button
+                  className="btn bg-[#ffbdbd] text-[#e4002b] font-extrabold hover:bg-[#ffe9e6] transition"
+                  disabled={deleting === prod._id}
+                  onClick={() => handleDeleteProduct(prod._id)}
+                >
+                  {deleting === prod._id ? "Deleting..." : <><FaTrash /> Delete</>}
+                </button>
+              </div>
             </motion.div>
           ))}
         </AnimatePresence>
