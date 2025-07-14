@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from "react";
+import React, { useState, useContext, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import logo from "../../../assets/logo.png";
 import { AuthApi } from "../../../server/AuthApi.jsx";
@@ -39,17 +39,42 @@ function Toast({ message, show, onClose }) {
   );
 }
 
+// Animated Info Box (for forgot username/password)
+function InfoBox({ message, onClose }) {
+  return (
+    <div className="absolute left-0 right-0 -top-[70px] z-10 flex justify-center">
+      <div className="bg-[#FCF8F3] border border-yellow-300 rounded-xl p-4 shadow-lg flex items-start gap-3 min-w-[220px] max-w-[350px] relative">
+        <span className="text-xl mt-0.5">✨</span>
+        <div className="flex-1">
+          <div className="text-gray-900 font-medium text-[15px] leading-snug">{message}</div>
+        </div>
+        <button
+          onClick={onClose}
+          className="absolute right-2 top-2 text-gray-500 hover:text-gray-900"
+          aria-label="Close"
+        >
+          <svg width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path d="M18 6L6 18M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function LoginPageComponent() {
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotUsername, setShowForgotUsername] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [touched, setTouched] = useState({ email: false, password: false });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  // Notification
   const [toast, setToast] = useState({ show: false, message: "" });
+
+  const usernameBtnRef = useRef(null);
+  const passwordBtnRef = useRef(null);
 
   const navigate = useNavigate();
   const { setUser } = useContext(UserContext);
@@ -59,7 +84,7 @@ export default function LoginPageComponent() {
 
   // Helper to show toast
   function notify(msg) {
-    setToast({ show: false, message: "" }); // reset in case
+    setToast({ show: false, message: "" });
     setTimeout(() => setToast({ show: true, message: msg }), 50);
   }
 
@@ -97,7 +122,7 @@ export default function LoginPageComponent() {
         } else {
           navigate("/home");
         }
-      }, 1200); // Let notification be visible before redirect
+      }, 1200);
     } else {
       setError(res.error || "Login failed");
       notify(res.error || "Login failed. Please try again.");
@@ -144,27 +169,6 @@ export default function LoginPageComponent() {
           px-4 py-7 sm:px-10 sm:py-10 md:px-16 md:py-14 lg:px-24 lg:py-14 
           max-w-full sm:max-w-lg md:max-w-xl mb-8 md:mb-10 transition-all duration-300"
         >
-          {showForgotUsername && (
-            <div className="absolute left-1/2 top-[72px] sm:top-14 -translate-x-1/2 sm:-left-64 sm:translate-x-0 z-10">
-              <div className="bg-[#FCF8F3] border border-yellow-300 rounded-xl p-5 shadow-lg flex items-start gap-3 min-w-[220px] sm:min-w-[280px] relative">
-                <span className="text-xl mt-0.5">✨</span>
-                <div className="flex-1">
-                  <div className="text-gray-900 font-medium text-[15px] leading-snug">
-                    You can now use your email instead of a username.
-                  </div>
-                </div>
-                <button
-                  onClick={() => setShowForgotUsername(false)}
-                  className="absolute right-2 top-2 text-gray-500 hover:text-gray-900"
-                  aria-label="Close"
-                >
-                  <svg width={20} height={20} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path d="M18 6L6 18M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          )}
           <form onSubmit={handleSubmit}>
             <p className="mb-5 md:mb-7 font-semibold text-[#006241] text-[13px] md:text-[15px]">
               * indicates required field
@@ -229,17 +233,40 @@ export default function LoginPageComponent() {
                 </a>
               </span>
             </div>
-            <div className="mb-5 md:mb-7 flex flex-col gap-2">
-              <button
-                type="button"
-                onClick={() => setShowForgotUsername(true)}
-                className="text-[#006241] font-bold text-[14px] md:text-[15px] hover:underline text-left"
-              >
-                Forgot your username?
-              </button>
-              <a href="#" className="text-[#006241] font-bold text-[14px] md:text-[15px] hover:underline text-left">
-                Forgot your password?
-              </a>
+            {/* Buttons with popups directly above */}
+            <div className="mb-5 md:mb-7 flex flex-col gap-2 relative">
+              <div className="relative w-fit self-start">
+                {showForgotUsername && (
+                  <InfoBox
+                    message="You can now use your email instead of a username."
+                    onClose={() => setShowForgotUsername(false)}
+                  />
+                )}
+                <button
+                  ref={usernameBtnRef}
+                  type="button"
+                  onClick={() => setShowForgotUsername(true)}
+                  className="text-[#006241] font-bold text-[14px] md:text-[15px] hover:underline text-left"
+                >
+                  Forgot your username?
+                </button>
+              </div>
+              <div className="relative w-fit self-start mt-2">
+                {showForgotPassword && (
+                  <InfoBox
+                    message="Working on this feature soon."
+                    onClose={() => setShowForgotPassword(false)}
+                  />
+                )}
+                <button
+                  ref={passwordBtnRef}
+                  type="button"
+                  onClick={() => setShowForgotPassword(true)}
+                  className="text-[#006241] font-bold text-[14px] md:text-[15px] hover:underline text-left"
+                >
+                  Forgot your password?
+                </button>
+              </div>
             </div>
             {error && <div className="text-red-600 font-semibold mb-3 md:mb-4 text-center">{error}</div>}
             <div className="flex justify-end mt-5 md:mt-7">

@@ -22,7 +22,7 @@ function ShopComponent() {
   const [selectedCategories, setSelectedCategories] = useState(() =>
     initialCat && CATEGORIES.includes(initialCat) ? [initialCat] : []
   );
-  const [priceRange, setPriceRange] = useState({ min: "", max: "" });
+  const [priceRange, setPriceRange] = useState({ max: 100000 });
   const [page, setPage] = useState(1);
 
   useEffect(() => {
@@ -45,10 +45,8 @@ function ShopComponent() {
           : true
       )
       .filter((p) => {
-        const minOk =
-          priceRange.min === "" || p.price >= parseFloat(priceRange.min);
-        const maxOk =
-          priceRange.max === "" || p.price <= parseFloat(priceRange.max);
+        const minOk = p.price >= 100;
+        const maxOk = priceRange.max === "" ? true : p.price <= priceRange.max;
         return minOk && maxOk;
       });
   }, [products, search, selectedBrands, selectedCategories, priceRange]);
@@ -150,36 +148,34 @@ function ShopComponent() {
               ))}
             </div>
           </div>
-          {/* Price */}
+          {/* Price - Updated to slider */}
           <div className="mb-7">
             <div className="font-bold text-[#00754A] mb-2 text-lg tracking-wide">Price</div>
-            <div className="flex gap-2 mb-2">
+            <div className="flex flex-col gap-1">
               <input
-                type="number"
-                placeholder="Min"
-                className="border border-gray-300 rounded-xl px-2 py-1 w-16 focus:border-[#00754A] focus:ring-[#00754A]/20"
-                value={priceRange.min}
-                onChange={(e) => {
-                  setPriceRange((prev) => ({
-                    ...prev,
-                    min: e.target.value,
-                  }));
-                  setPage(1);
-                }}
-              />
-              <input
-                type="number"
-                placeholder="Max"
-                className="border border-gray-300 rounded-xl px-2 py-1 w-16 focus:border-[#00754A] focus:ring-[#00754A]/20"
+                type="range"
+                min={100}
+                max={100000}
+                step={100}
                 value={priceRange.max}
-                onChange={(e) => {
-                  setPriceRange((prev) => ({
+                className="w-full accent-[#00754A] h-2 bg-[#e9f8f2] rounded-full outline-none transition-all"
+                onChange={e => {
+                  setPriceRange(prev => ({
                     ...prev,
-                    max: e.target.value,
+                    max: Number(e.target.value),
                   }));
                   setPage(1);
                 }}
               />
+              <div className="flex justify-between text-xs mt-1">
+                <span className="text-gray-400">NPR 100</span>
+                <span className="text-[#00754A] font-bold bg-[#e9f8f2] px-2 py-0.5 rounded-xl shadow-inner">
+                  {priceRange.max === 100000
+                    ? "Up to Any"
+                    : `Up to NPR ${Number(priceRange.max).toLocaleString()}`}
+                </span>
+                <span className="text-gray-400">NPR 100,000</span>
+              </div>
             </div>
           </div>
           {/* Brands */}
