@@ -35,7 +35,8 @@ FootMart is a modern MERN stack web application designed for football enthusiast
 1. **Clone the repository**
    ```bash
    git clone https://github.com/Ziroworld/FootMart.git
-````
+   
+---
 
 2. **Navigate to the project directory**
 
@@ -43,11 +44,13 @@ FootMart is a modern MERN stack web application designed for football enthusiast
    cd FootMart
    ```
 
+   ---
 3. **Install backend dependencies**
 
    ```bash
    npm install
    ```
+---
 
 4. **Navigate to the frontend and install dependencies**
 
@@ -55,6 +58,7 @@ FootMart is a modern MERN stack web application designed for football enthusiast
    cd client
    npm install
    ```
+---
 
 5. **Build the frontend**
 
@@ -62,6 +66,7 @@ FootMart is a modern MERN stack web application designed for football enthusiast
    npm run build
    cd ..
    ```
+---
 
 6. **Set up environment variables**
 
@@ -69,6 +74,7 @@ FootMart is a modern MERN stack web application designed for football enthusiast
    * Fill in required values (e.g., MongoDB URI, port number)
 
 ---
+
 
 ## ▶️ Running the Application
 
