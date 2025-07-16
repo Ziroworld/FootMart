@@ -1,75 +1,105 @@
-# FootMart
-FootyConnect
-Description
-FootyConnect is a MERN stack web application designed for football enthusiasts, combining e-commerce and community features. Users can shop for football merchandise like boots and jerseys, view local tournament standings, and connect with local players through detailed profiles with ratings. Built for a seamless user experience, it aims to support grassroots football communities while offering a practical shopping platform.
-Prerequisites
+⚽️ FootMart
 
-Node.js (version 14 or higher)
-MongoDB (local installation or MongoDB Atlas)
+FootMart is a modern MERN stack web application designed for football enthusiasts in Nepal and beyond. The platform combines a user-friendly e-commerce store for football gear with vibrant community features, allowing users to shop, review, and connect—all in one place.
+🚀 Features
 
-Installation
+    🛒 Shop for football merchandise (boots, jerseys, accessories)
 
-Clone the repository:
-git clone (https://github.com/Ziroworld/FootMart.git)
+    🌟 Wishlist and cart functionality
 
+    🏆 View local tournament standings
 
-Navigate to the project directory:
-cd footyconnect
+    👤 Player profiles with reviews and ratings
 
+    🏃 Responsive, minimal UI for seamless browsing
 
-Install backend dependencies:
+    🔒 JWT authentication for secure logins
+
+📸 Project Snapshot
+
+📋 Prerequisites
+
+    Node.js (v14 or higher)
+
+    MongoDB (local install or MongoDB Atlas)
+
+🛠️ Installation
+
+    Clone the repository
+
+git clone https://github.com/Ziroworld/FootMart.git
+
+Navigate to the project directory
+
+cd FootMart
+
+Install backend dependencies
+
 npm install
 
+Navigate to the frontend and install dependencies
 
-Navigate to the frontend directory and install dependencies:
 cd client
 npm install
 
+Build the frontend
 
-Build the frontend:
-npm run build
-cd ..
+    npm run build
+    cd ..
 
+    Set up environment variables
 
-Set up environment variables:
+        Copy .env.example to .env
 
-Copy the .env.example file to .env
-Fill in the required values (e.g., MongoDB URI, port number)
+        Fill in required values (e.g., MongoDB URI, port number)
 
+▶️ Running the Application
 
-
-Running the Application
 Option 1: Run the full application on port 8080
 
-Start the backend server:
 npm start
 
+    Visit: http://localhost:8080
 
-Open your browser and navigate to:
-http://localhost:8080
+Option 2: Run frontend and backend separately (recommended for development)
 
+    Start the backend server
 
-
-Option 2: Run frontend and backend separately (for development)
-
-Start the backend server:
 npm run server
 
+In a separate terminal, start the frontend
 
-In a separate terminal, start the frontend:
-cd client
-npm start
+    cd client
+    npm start
 
+        Frontend: http://localhost:3000
 
-The frontend will be available at http://localhost:3000, and it will proxy API requests to the backend at http://localhost:5000.
+        Backend: http://localhost:5000
 
+    Note: If using Option 2, ensure "proxy": "http://localhost:5000" is set in the frontend's package.json.
 
-Note: If using Option 2, ensure the proxy is correctly set in the frontend's package.json (e.g., "proxy": "http://localhost:5000").
-License
-This project is licensed under the MIT License - see the LICENSE file for details.
-Additional Notes:
+💡 Usage
 
-Replace yourusername with your actual GitHub username in the clone command.
-Ensure the repository URL matches your project’s GitHub URL.
-Adjust port numbers or script names if your project configuration differs.
+    Register or log in as a user
 
+    Browse products, add to wishlist or cart
+
+    Check tournament standings and player ratings
+
+    Seamlessly checkout with real-time order confirmation
+
+📄 License
+
+This project is licensed under the MIT License.
+See the LICENSE file for details.
+🙌 Credits
+
+Developed by Rohan Manandhar
+Student ID: 220372 | Coventry ID: 13703978
+Softwarica College of IT and eCommerce, Coventry University
+📬 Feedback & Contributions
+
+Pull requests and suggestions are welcome!
+For issues or ideas, open an issue or email footmart10@gmail.com.
+
+Happy Football Shopping! ⚽️🛍️
