@@ -8,7 +8,7 @@ const stateOptions = [
   'Koshi', 'Madhesh', 'Bagmati', 'Gandaki', 'Lumbini', 'Karnali', 'Sudurpashchim'
 ];
 
-// Toast with animated check
+// Toast with animated check (unchanged)
 function Toast({ message, type = 'success', onClose }) {
   return (
     <AnimatePresence>
@@ -36,11 +36,85 @@ function Toast({ message, type = 'success', onClose }) {
   );
 }
 
+// Success Modal (light green, animated, with cross & shop more)
+function SuccessModal({ onClose, onShop }) {
+  return (
+    <motion.div
+      className="fixed inset-0 z-[1000] flex items-center justify-center"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      style={{ background: 'rgba(0,0,0,0.25)' }}
+    >
+      <motion.div
+        initial={{ scale: 0.85, opacity: 0.7, y: 24 }}
+        animate={{ scale: 1, opacity: 1, y: 0 }}
+        exit={{ scale: 0.85, opacity: 0.5, y: 24 }}
+        transition={{ type: "spring", duration: 0.36 }}
+        className="relative bg-[#f0fff5] border-2 border-[#b4f0ce] rounded-3xl shadow-2xl px-8 py-10 max-w-xs sm:max-w-md w-full flex flex-col items-center"
+      >
+        {/* Cross button */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-5 text-[#36ba78] hover:text-[#1c7e53] text-2xl font-black rounded-full bg-white bg-opacity-70 shadow p-1 transition hover:scale-110"
+          aria-label="Close"
+        >
+          ×
+        </button>
+        {/* Animated check */}
+        <motion.div
+          className="mb-5 flex items-center justify-center"
+          initial={{ scale: 0.7, opacity: 0 }}
+          animate={{
+            scale: 1,
+            opacity: 1,
+            rotate: [0, 15, -8, 8, 0]
+          }}
+          transition={{
+            duration: 1.2,
+            repeat: Infinity,
+            repeatType: "loop",
+            ease: "easeInOut",
+            type: "tween"
+          }}
+        >
+          <svg className="w-16 h-16 text-[#15c576]" fill="none" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="11" fill="#dcfce7" />
+            <path
+              d="M8.5 12.7l2.3 2.3 4.3-4.3"
+              stroke="#15c576"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              fill="none"
+            />
+          </svg>
+        </motion.div>
+        <div className="text-[#108751] font-black text-2xl mb-1 text-center drop-shadow">
+          Order Placed!
+        </div>
+        <div className="text-gray-700 text-base font-semibold mb-6 text-center">
+          Thank you for your purchase.<br />
+          A confirmation email and SMS have been sent.<br />
+          <span className="block mt-2 text-[#15c576] font-bold">Welcome to the FootMart family!</span>
+        </div>
+        <button
+          onClick={onShop}
+          className="mt-2 px-6 py-2.5 rounded-full bg-[#dcfce7] border-2 border-[#15c576] text-[#108751] font-extrabold text-lg flex items-center gap-2 shadow-md hover:bg-[#bbf7d0] hover:text-[#0c5636] transition"
+        >
+          Shop more <span className="text-xl">🛒</span>
+        </button>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 const OrderSection = () => {
   const navigate = useNavigate();
   const { cart, removeFromCart, clearCart } = useCart();
   const { createOrder } = useOrder();
 
+  // Form state
   const [billingDetails, setBillingDetails] = useState({
     fullName: '', phone: '', address: '', landmark: '', city: '', state: '', country: ''
   });
@@ -63,9 +137,10 @@ const OrderSection = () => {
     return () => document.removeEventListener('mousedown', onClickOutside);
   }, []);
 
+  // Only redirect to cart if cart is empty *and* not in success modal
   useEffect(() => {
-    if (!cart.items.length) navigate('/cart');
-  }, [cart, navigate]);
+    if (!cart.items.length && !orderSuccess) navigate('/cart');
+  }, [cart, navigate, orderSuccess]);
 
   const handleInputChange = e => {
     const { name, value } = e.target;
@@ -92,7 +167,7 @@ const OrderSection = () => {
     setTimeout(() => setSaveNotification({ show: false, type: 'success', message: '' }), 2300);
   };
 
-  // ORDER PLACEMENT
+  // ORDER PLACEMENT - Don't clear cart yet!
   const handlePlaceOrder = async () => {
     setOrderError(null);
     try {
@@ -107,8 +182,7 @@ const OrderSection = () => {
         country: billingDetails.country
       };
       await createOrder(orderData);
-      await clearCart();
-      setOrderSuccess(true);
+      setOrderSuccess(true); // Show modal only, don't clear cart!
     } catch (error) {
       let msg = 'Failed to place order.';
       if (error.response && error.response.data && error.response.data.message) {
@@ -118,9 +192,16 @@ const OrderSection = () => {
     }
   };
 
-  const handleSuccessOkay = () => {
+  // When user closes modal, THEN clear cart and redirect to home/shop
+  const handleSuccessOkay = async () => {
     setOrderSuccess(false);
+    await clearCart();
     navigate('/home');
+  };
+  const handleShopMore = async () => {
+    setOrderSuccess(false);
+    await clearCart();
+    navigate('/shop');
   };
 
   return (
@@ -128,44 +209,10 @@ const OrderSection = () => {
       {/* ORDER SUCCESS MODAL */}
       <AnimatePresence>
         {orderSuccess && (
-          <motion.div
-            className="fixed inset-0 z-[1000] flex items-center justify-center bg-black bg-opacity-30"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
-            <motion.div
-              className="bg-white rounded-3xl shadow-2xl p-10 max-w-xs sm:max-w-md w-full flex flex-col items-center"
-              initial={{ scale: 0.85, opacity: 0.7 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.85, opacity: 0 }}
-              transition={{ duration: 0.36, type: "spring" }}
-            >
-              <motion.div
-                className="mb-5"
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.18 }}
-              >
-                <svg className="w-16 h-16 mx-auto text-green-500" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="2" fill="#E8FFF2"/>
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12.5l2.5 2.5L16 9" />
-                </svg>
-              </motion.div>
-              <div className="text-green-800 font-black text-xl mb-1 text-center">
-                Order placed successfully!
-              </div>
-              <div className="text-gray-700 text-base mb-6 text-center">
-                Thank you for your purchase. Confirmation has been sent!
-              </div>
-              <button
-                onClick={handleSuccessOkay}
-                className="px-7 py-2.5 rounded-full bg-[#16e087]/90 text-[#004425] font-bold border border-[#16e087] hover:bg-[#16e087] hover:text-white transition"
-              >
-                Okay
-              </button>
-            </motion.div>
-          </motion.div>
+          <SuccessModal
+            onClose={handleSuccessOkay}
+            onShop={handleShopMore}
+          />
         )}
       </AnimatePresence>
 
