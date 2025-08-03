@@ -48,6 +48,7 @@ FootMart is a modern MERN stack web application designed for football enthusiast
 3. **Install backend dependencies**
 
    ```bash
+   cd server
    npm install
    ```
 ---
@@ -60,15 +61,7 @@ FootMart is a modern MERN stack web application designed for football enthusiast
    ```
 ---
 
-5. **Build the frontend**
-
-   ```bash
-   npm run build
-   cd ..
-   ```
----
-
-6. **Set up environment variables**
+5. **Set up environment variables**
 
    * Copy `.env.example` to `.env`
    * Fill in required values (e.g., MongoDB URI, port number)
@@ -93,7 +86,7 @@ Visit: [http://localhost:8080](http://localhost:8080)
 1. **Start the backend server**
 
    ```bash
-   npm run server
+   npm run dev
    ```
 
 2. **In a separate terminal, start the frontend**
